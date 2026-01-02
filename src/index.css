@@ -1,0 +1,143 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =================================================================
+   1. GLOBAL SCROLLBAR (GLASSMORPHISM)
+   ================================================================= */
+@layer base {
+  /* Default untuk seluruh halaman */
+  * {
+    scrollbar-width: thin; 
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  }
+
+  /* Webkit (Chrome, Edge, Safari) */
+  ::-webkit-scrollbar {
+    width: 6px;  
+    height: 6px; 
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent !important;
+    margin-block: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.1); 
+    border-radius: 9999px; 
+    border: 1px solid transparent;
+    background-clip: content-box;
+    transition: background-color 0.3s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: #6C5DD3 !important; /* Warna Neon Purple */
+    border: 0; 
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: transparent !important;
+  }
+
+  /* 2. TEXT SELECTION & CARET (THEME MATCHING) */
+  ::selection {
+    background-color: rgba(108, 93, 211, 0.3); /* Ungu Transparan */
+    color: #ffffff;
+  }
+
+  input, textarea, [contenteditable] {
+    caret-color: #6C5DD3; /* Kursor Ketik Ungu */
+  }
+}
+
+/* =================================================================
+   3. LEXICAL EDITOR SPECIFIC STYLES
+   ================================================================= */
+@layer components {
+  /* Fix untuk Nested List di Lexical agar indentation rapi */
+  .editor-nested-list-item {
+    list-style-type: none;
+  }
+  
+  /* Pastikan list default browser tidak mengganggu (Reset) */
+  ul, ol {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Placeholder Styling (Teks abu-abu "Mulai menulis...") */
+  .editor-placeholder {
+    color: #475569;
+    overflow: hidden;
+    position: absolute;
+    text-overflow: ellipsis;
+    top: 15px;
+    left: 10px;
+    font-size: 15px;
+    user-select: none;
+    display: inline-block;
+    pointer-events: none;
+  }
+}
+
+/* =================================================================
+   4. ANIMATION UTILITIES
+   ================================================================= */
+.animate-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.animate-out {
+  animation: fadeOut 0.2s ease-in forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.98); }
+}
+
+/* Glass Panel Helper */
+.glass-panel {
+  background: rgba(22, 24, 29, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* =================================================================
+   5. PRINT STYLES (Agar rapi saat Export PDF/Print)
+   ================================================================= */
+@media print {
+  /* Sembunyikan Sidebar & UI saat print */
+  aside, header, .floating-toolbar, .Toastify {
+    display: none !important;
+  }
+
+  /* Atur background jadi putih kertas */
+  body, main, .bg-\[\#0D0F12\], .bg-\[\#0F1115\] {
+    background-color: white !important;
+    color: black !important;
+  }
+
+  /* Hapus scrollbar & border */
+  .overflow-y-auto {
+    overflow: visible !important;
+    height: auto !important;
+  }
+  
+  .border, .border-t, .border-b {
+    border: none !important;
+  }
+
+  /* Reset Text Color untuk Kertas */
+  p, h1, h2, h3, li, span {
+    color: black !important;
+    text-shadow: none !important;
+  }
+}
