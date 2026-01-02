@@ -42,27 +42,27 @@ import FloatingToolbarPlugin from './plugins/FloatingToolbarPlugin';
 import { ReviewNode } from './nodes/ReviewNode';
 
 // ==========================================
-// 1. THEME CONFIGURATION (MS WORD STYLE)
+// 1. THEME CONFIGURATION (THEME-AWARE)
 // ==========================================
 const theme = {
-  paragraph: 'mb-3 text-slate-300 leading-relaxed text-base font-serif', 
+  paragraph: 'mb-3 text-[var(--text-secondary)] leading-relaxed text-base font-serif', 
   heading: {
-    h1: 'text-3xl font-bold text-white mb-4 mt-6 border-b border-slate-700 pb-2',
-    h2: 'text-2xl font-bold text-slate-100 mb-3 mt-5',
-    h3: 'text-xl font-bold text-slate-200 mb-2 mt-4',
+    h1: 'text-3xl font-bold text-[var(--text-primary)] mb-4 mt-6 border-b border-[var(--border-secondary)] pb-2',
+    h2: 'text-2xl font-bold text-[var(--text-primary)] mb-3 mt-5',
+    h3: 'text-xl font-bold text-[var(--text-primary)] mb-2 mt-4',
   },
   text: {
-    bold: 'font-bold text-white',
-    italic: 'italic text-slate-200',
-    underline: 'underline decoration-slate-500 underline-offset-4',
-    strikethrough: 'line-through text-slate-500',
+    bold: 'font-bold text-[var(--text-primary)]',
+    italic: 'italic text-[var(--text-secondary)]',
+    underline: 'underline decoration-[var(--text-tertiary)] underline-offset-4',
+    strikethrough: 'line-through text-[var(--text-tertiary)]',
   },
   list: {
-    ul: 'list-disc list-outside mb-4 ml-8 text-slate-300',
-    ol: 'list-decimal list-outside mb-4 ml-8 text-slate-300',
+    ul: 'list-disc list-outside mb-4 ml-8 text-[var(--text-secondary)]',
+    ol: 'list-decimal list-outside mb-4 ml-8 text-[var(--text-secondary)]',
     listitem: 'pl-1',
   },
-  quote: 'border-l-4 border-[#6C5DD3] pl-4 italic text-slate-400 my-4 bg-white/5 py-2 rounded-r',
+  quote: 'border-l-4 border-[var(--accent-primary)] pl-4 italic text-[var(--text-tertiary)] my-4 bg-[color-mix(in_srgb,_var(--bg-primary)_50%,_transparent)] py-2 rounded-r',
 };
 
 // ==========================================
@@ -246,7 +246,7 @@ function ToolbarPlugin() {
       
       {/* SPACING PLACEHOLDER (FITUR EXTRA) */}
       <div className="ml-auto flex items-center gap-2">
-         <span className="text-[9px] text-slate-600 font-bold px-2 py-1 bg-[#0F1115] rounded">MS WORD MODE</span>
+         <span className="text-[9px] text-[var(--text-tertiary)] font-bold px-2 py-1 bg-[#0F1115] rounded">MS WORD MODE</span>
       </div>
     </div>
   );
@@ -324,11 +324,11 @@ const LexicalEditor = forwardRef(({
             contentEditable={
                 <ContentEditable 
                     className="outline-none min-h-[900px] p-12 text-base focus:outline-none" 
-                    style={{ fontFamily: '"Times New Roman", Times, serif', lineHeight: '1.6', color: '#cbd5e1' }} 
+                    style={{ fontFamily: '"Times New Roman", Times, serif', lineHeight: '1.6', color: var(--text-secondary) }} 
                 />
             }
             placeholder={
-                <div className="absolute top-12 left-12 text-slate-600 pointer-events-none select-none italic">
+                <div className="absolute top-12 left-12 text-[var(--text-tertiary)] pointer-events-none select-none italic">
                     Mulai menulis bab ini...
                 </div>
             }

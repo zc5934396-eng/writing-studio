@@ -39,11 +39,11 @@ export default function AssistantPanel(props) {
     // (Opsional logic, tapi bagus untuk UX)
 
     return (
-        <div className="flex flex-col h-full bg-[#16181D] text-slate-300 border-l border-[#252830]">
+        <div className="flex flex-col h-full bg-sidebar-bg text-sidebar-text border-l border-sidebar-border">
             
             {/* 1. TOP HEADER: MODE SWITCHER */}
-            <div className="p-3 bg-[#0D0F12] border-b border-white/5">
-                <div className="flex bg-[#16181D] p-1 rounded-xl border border-white/5">
+            <div className="p-3 bg-sidebar-header-bg border-b border-sidebar-border">
+                <div className="flex bg-sidebar-tab-bg p-1 rounded-xl border border-sidebar-border">
                     <ModeBtn 
                         isActive={mode === 'write'} 
                         onClick={() => { setMode('write'); setActiveTab('generator'); }} 
@@ -60,7 +60,7 @@ export default function AssistantPanel(props) {
             </div>
 
             {/* 2. SUB-NAVIGATION (Tab Icons) */}
-            <div className="flex items-center gap-1 px-3 py-2 bg-[#0D0F12]/50 border-b border-white/5 overflow-x-auto custom-scrollbar">
+            <div className="flex items-center gap-1 px-3 py-2 bg-sidebar-header-bg/50 border-b border-sidebar-border overflow-x-auto custom-scrollbar">
                 {tabs[mode].map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.id;
@@ -70,8 +70,8 @@ export default function AssistantPanel(props) {
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg transition-all text-[10px] font-bold uppercase tracking-wider ${
                                 isActive 
-                                ? 'bg-[#6C5DD3] text-white shadow-lg shadow-[#6C5DD3]/20' 
-                                : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'
+                                ? 'bg-primary text-white shadow-lg shadow-primary/20' 
+                                : 'text-sidebar-text-secondary hover:text-sidebar-text hover:bg-sidebar-hover'
                             }`}
                         >
                             <Icon size={14} strokeWidth={isActive ? 2.5 : 2} />
@@ -82,7 +82,7 @@ export default function AssistantPanel(props) {
             </div>
 
             {/* 3. DYNAMIC CONTENT (No Change in Logic, Just Wrapper) */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar relative bg-[#16181D]">
+            <div className="flex-1 overflow-y-auto custom-scrollbar relative bg-sidebar-bg">
                 {activeTab === 'generator' && <GeneratorTab {...props} />}
                 {activeTab === 'chat' && <ChatInterface {...props} />}
                 {activeTab === 'tools' && <ToolsTab {...props} />}
