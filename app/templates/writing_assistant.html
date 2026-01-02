@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Writing Studio Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        /* Custom Scrollbar */
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #2D303E; border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #6C5DD3; }
+        
+        /* Reset Body agar Full Screen */
+        body { background-color: #0F1115; color: white; margin: 0; padding: 0; overflow: hidden; }
+        #writing-studio-react-root { width: 100vw; height: 100vh; }
+    </style>
+</head>
+<body class="bg-[#0F1115] text-white h-screen w-screen overflow-hidden">
+
+    <div id="writing-studio-react-root" class="w-full h-full"></div>
+
+<script>
+    window.initialState = {
+        projectId: "{{ project.id if project else '' }}",
+        isPro: "{{ 'true' if current_user.is_pro else 'false' }}" === "true",
+        endpoints: {
+            writingAssistant: "{{ url_for('assistant.api_writing_assistant') }}",
+            generateOutline: "{{ url_for('assistant.api_generate_outline') }}"
+        }
+    };
+</script>
+    
+    <script type="module" src="{{ url_for('static', filename='js/dist/writing-studio-bundle.js') }}"></script>
+    
+</body>
+</html>

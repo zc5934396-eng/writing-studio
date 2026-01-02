@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curhat AI - Research Cockpit</title>
+    <link rel="icon" href="data:,">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['"Inter"', 'sans-serif'],
+                        display: ['"Space Grotesk"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace']
+                    },
+                    colors: {
+                        dark: { 
+                            bg: '#050507',       /* Hampir Hitam Pekat */
+                            surface: '#0E0F13',  /* Kartu/Panel */
+                            border: '#1F2128',   /* Garis Tipis */
+                            hover: '#18191E'     
+                        },
+                        brand: { 
+                            primary: '#6366F1',    /* Indigo Neon */
+                            secondary: '#EC4899',  /* Pink Neon */
+                            accent: '#06B6D4'      /* Cyan Neon */
+                        }
+                    },
+                    boxShadow: {
+                        'neon': '0 0 20px rgba(99, 102, 241, 0.15), 0 0 40px rgba(99, 102, 241, 0.05)',
+                        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.36)',
+                    },
+                    backgroundImage: {
+                        'mesh': 'radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08), transparent 25%), radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.08), transparent 25%)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* BASE */
+        body { background-color: #050507; color: #E2E8F0; overflow: hidden; margin: 0; font-family: 'Inter', sans-serif; }
+        
+        /* MESH BACKGROUND ANIMATION */
+        .bg-mesh-anim {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
+            background: radial-gradient(circle at 50% 50%, #0E0F13 0%, #050507 100%);
+        }
+        .bg-mesh-anim::before {
+            content: ''; position: absolute; top: -20%; left: -20%; width: 60%; height: 60%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.07) 0%, transparent 70%);
+            animation: float 15s infinite alternate ease-in-out;
+        }
+        .bg-mesh-anim::after {
+            content: ''; position: absolute; bottom: -20%; right: -20%; width: 60%; height: 60%;
+            background: radial-gradient(circle, rgba(236, 72, 153, 0.07) 0%, transparent 70%);
+            animation: float 20s infinite alternate-reverse ease-in-out;
+        }
+        @keyframes float { 0% { transform: translate(0, 0); } 100% { transform: translate(50px, 50px); } }
+
+        /* SCROLLBAR */
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #6366F1; }
+
+        /* CHAT STYLES */
+        .prose-ai { font-size: 0.95rem; line-height: 1.7; color: #E2E8F0; font-weight: 300; }
+        .prose-ai strong { color: #fff; font-weight: 600; font-family: 'Space Grotesk', sans-serif; }
+        .prose-ai h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; color: #A5B4FC; margin-top: 1.5rem; }
+        .prose-ai code { font-family: 'JetBrains Mono', monospace; background: rgba(99, 102, 241, 0.1); padding: 2px 5px; border-radius: 4px; color: #818CF8; font-size: 0.85em; border: 1px solid rgba(99, 102, 241, 0.2); }
+        .prose-ai pre { background: #0D0E12; border: 1px solid #1F2128; padding: 1rem; border-radius: 12px; margin: 1rem 0; overflow-x: auto; }
+
+        /* GLASS SIDEBAR */
+        .glass-sidebar {
+            background: rgba(14, 15, 19, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* COMMAND BAR INPUT */
+        .command-bar {
+            background: rgba(20, 21, 25, 0.8);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .command-bar:focus-within {
+            border-color: #6366F1;
+            box-shadow: 0 0 0 1px #6366F1, 0 10px 40px rgba(99, 102, 241, 0.1);
+            background: rgba(20, 21, 25, 0.95);
+            transform: translateY(-2px);
+        }
+
+        /* MODEL SELECTOR CHIP */
+        .model-chip {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex; align-items: center; gap: 8px; padding: 4px 10px;
+        }
+        .model-chip:hover, .model-chip.active {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: #6366F1;
+            color: white;
+        }
+        .model-chip.active { box-shadow: 0 0 10px rgba(99, 102, 241, 0.2); }
+
+        /* BUBBLES */
+        .bubble-user {
+            background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+            border-radius: 16px 16px 2px 16px;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .bubble-ai {
+            background: transparent;
+            border-left: 2px solid #6366F1;
+            padding-left: 1rem;
+        }
+
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+
+<!-- Body tidak lagi memiliki x-data -->
+<body data-user-pro="{{ 'true' if current_user.is_pro else 'false' }}">
+    
+    <div class="bg-mesh-anim"></div>
+
+    <!-- x-data dipindahkan ke div ini -->
+    <div x-data="chatPageApp()" id="app" class="flex h-screen w-full">
+        
+        <aside class="w-72 flex-shrink-0 flex flex-col glass-sidebar z-30 relative">
+            
+            <div class="h-16 flex items-center px-6 border-b border-white/5">
+                <a href="/" class="flex items-center gap-3 group">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-neon">
+                        <i data-lucide="layout-grid" class="w-4 h-4 text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-sm font-bold text-white font-display tracking-wide">ONTHESIS</h1>
+                        <p class="text-[10px] text-gray-400">Research Cockpit</p>
+                    </div>
+                </a>
+            </div>
+
+            <div class="p-5">
+                <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3 block">Konteks Skripsi</label>
+                <div class="relative group">
+                    <div class="absolute inset-0 bg-indigo-500/10 rounded-xl blur-sm opacity-0 group-hover:opacity-100 transition duration-500"></div>
+                    <select x-model="projectId" @change="loadContext()" 
+                            class="relative w-full bg-dark-surface border border-dark-border text-white text-xs font-medium py-3 pl-10 pr-8 rounded-xl appearance-none focus:outline-none focus:border-brand-primary cursor-pointer shadow-lg transition-all">
+                        <option value="">-- Pilih Proyek --</option>
+                        <template x-for="p in projects" :key="p.id">
+                            <option :value="p.id" x-text="p.title"></option>
+                        </template>
+                    </select>
+                    <i data-lucide="folder-git-2" class="absolute left-3.5 top-3 w-4 h-4 text-brand-primary z-10"></i>
+                    <i data-lucide="chevron-down" class="absolute right-3 top-3 w-4 h-4 text-gray-500 z-10 pointer-events-none"></i>
+                </div>
+                
+                <div x-show="projectId" class="mt-3 p-3 rounded-lg bg-white/5 border border-white/5 flex items-start gap-2 animate-fade-in-up">
+                    <i data-lucide="info" class="w-3 h-3 text-brand-accent mt-0.5 shrink-0"></i>
+                    <p class="text-[10px] text-gray-400 leading-relaxed">AI terhubung ke data skripsi Anda. Ia tahu Judul, Masalah, dan Metode yang Anda gunakan.</p>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto custom-scroll px-5 py-2 space-y-1">
+                <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">Riwayat Sesi</label>
+                <div class="p-2 rounded-lg hover:bg-white/5 cursor-pointer text-xs text-gray-400 hover:text-white transition truncate flex items-center gap-2">
+                    <i data-lucide="message-square" class="w-3 h-3"></i> Diskusi Bab 1
+                </div>
+                <div class="p-2 rounded-lg hover:bg-white/5 cursor-pointer text-xs text-gray-400 hover:text-white transition truncate flex items-center gap-2">
+                    <i data-lucide="message-square" class="w-3 h-3"></i> Validasi Metode
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-white/5">
+                <a href="{{ url_for('main.user_profile') }}" class="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition group">
+                    <img src="{{ current_user.photo_url or 'https://ui-avatars.com/api/?name=' + (current_user.username|urlencode) + '&background=random' }}" class="w-8 h-8 rounded-full ring-2 ring-transparent group-hover:ring-brand-primary transition">
+                    <div class="overflow-hidden">
+                        <p class="text-xs font-bold text-white truncate">{{ current_user.username }}</p>
+                        <p class="text-[10px] text-gray-500 truncate">{{ 'Pro Member' if current_user.is_pro else 'Free Plan' }}</p>
+                    </div>
+                </a>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col relative min-w-0">
+            
+            <div class="h-14 flex items-center justify-between px-6 z-10 absolute top-0 left-0 w-full bg-gradient-to-b from-dark-bg via-dark-bg to-transparent">
+                <div class="flex items-center gap-2" x-data="{ open: false }">
+                    <div class="relative">
+                        <button @click="open = !open" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:border-brand-primary/50 hover:bg-white/10 transition backdrop-blur-md">
+                            <span class="w-2 h-2 rounded-full bg-brand-primary shadow-[0_0_8px_#6366F1]"></span>
+                            <span class="text-xs font-bold text-white" x-text="getModelName(selectedModel)">Llama 3.3</span>
+                            <i data-lucide="chevron-down" class="w-3 h-3 text-gray-400"></i>
+                        </button>
+
+                        <div x-show="open" @click.away="open = false" x-transition class="absolute top-full left-0 mt-2 w-56 bg-dark-surface border border-dark-border rounded-xl shadow-2xl overflow-hidden z-50">
+                            <div class="px-3 py-2 text-[10px] font-bold text-gray-500 border-b border-white/5 uppercase">AI Model</div>
+                            
+                            <div @click="selectedModel = 'fast'; open = false" class="px-3 py-2 hover:bg-white/5 cursor-pointer flex items-center gap-3" :class="selectedModel === 'fast' ? 'bg-white/5' : ''">
+                                <img src="{{ url_for('static', filename='images/logo-llama.png') }}" class="w-5 h-5 rounded opacity-80">
+                                <div><p class="text-xs font-bold text-white">Llama 3.3</p><p class="text-[9px] text-gray-500">Cepat & Gratis</p></div>
+                            </div>
+
+                            <div @click="isPro ? (selectedModel = 'claude', open = false) : alert('Upgrade PRO dulu!')" class="px-3 py-2 hover:bg-white/5 cursor-pointer flex items-center gap-3 relative group" :class="selectedModel === 'claude' ? 'bg-white/5' : ''">
+                                <img src="{{ url_for('static', filename='images/logo-claude.png') }}" class="w-5 h-5 rounded opacity-80">
+                                <div><p class="text-xs font-bold text-white">Claude 3.5</p><p class="text-[9px] text-gray-500">Gaya Natural</p></div>
+                                <i x-show="!isPro" data-lucide="lock" class="w-3 h-3 text-gray-600 absolute right-3"></i>
+                            </div>
+
+                            <div @click="isPro ? (selectedModel = 'gpt5', open = false) : alert('Upgrade PRO dulu!')" class="px-3 py-2 hover:bg-white/5 cursor-pointer flex items-center gap-3 relative group" :class="selectedModel === 'gpt5' ? 'bg-white/5' : ''">
+                                <img src="{{ url_for('static', filename='images/logo-chatgpt.png') }}" class="w-5 h-5 rounded opacity-80">
+                                <div><p class="text-xs font-bold text-white">GPT-4o</p><p class="text-[9px] text-gray-500">Analisis Logis</p></div>
+                                <i x-show="!isPro" data-lucide="lock" class="w-3 h-3 text-gray-600 absolute right-3"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <button @click="window.location.reload()" class="p-2 rounded-full hover:bg-white/5 text-gray-400 hover:text-white transition" title="Reset Chat"><i data-lucide="rotate-cw" class="w-4 h-4"></i></button>
+                    <a href="{{ url_for('auth.logout') }}" class="p-2 rounded-full hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition"><i data-lucide="log-out" class="w-4 h-4"></i></a>
+                </div>
+            </div>
+
+            <div id="chat-window" class="flex-1 overflow-y-auto custom-scroll px-4 md:px-0 pb-32 pt-20">
+                <div class="max-w-3xl mx-auto w-full">
+                    
+                    <div x-show="!hasMessages" class="flex flex-col items-center justify-center mt-8 text-center animate-fade-in-up">
+                        <div class="w-24 h-24 mb-6 relative">
+                            <div class="absolute inset-0 bg-brand-primary blur-[40px] opacity-20 rounded-full"></div>
+                            <div class="relative w-full h-full bg-[#121214] border border-white/10 rounded-3xl flex items-center justify-center shadow-2xl">
+                                <i data-lucide="bot" class="w-10 h-10 text-brand-primary"></i>
+                            </div>
+                        </div>
+                        
+                        <h2 class="text-3xl font-bold text-white font-display mb-2">Hai, {{ current_user.username }}</h2>
+                        <p class="text-gray-400 max-w-md mb-10 text-sm leading-relaxed">
+                            Saya Konsultan Skripsi AI Anda. Pilih proyek di kiri untuk mulai diskusi yang relevan.
+                        </p>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl px-4" x-show="projectId">
+                            <button @click="sendQuickPrompt('Analisis judul skripsi saya, apakah ada celah riset?')" class="p-4 rounded-xl bg-[#0E0F13] border border-white/10 hover:border-brand-primary/50 hover:bg-white/5 transition text-left group">
+                                <span class="text-[10px] font-bold text-brand-accent mb-1 block uppercase tracking-wider">Validasi</span>
+                                <span class="text-xs text-gray-300 group-hover:text-white">"Cek judul saya..."</span>
+                            </button>
+                            <button @click="sendQuickPrompt('Bantu rumuskan hipotesis statistik.')" class="p-4 rounded-xl bg-[#0E0F13] border border-white/10 hover:border-brand-primary/50 hover:bg-white/5 transition text-left group">
+                                <span class="text-[10px] font-bold text-brand-secondary mb-1 block uppercase tracking-wider">Hipotesis</span>
+                                <span class="text-xs text-gray-300 group-hover:text-white">"Buat H0 & H1..."</span>
+                            </button>
+                            <button @click="sendQuickPrompt('Apa teori grand theory yang cocok?')" class="p-4 rounded-xl bg-[#0E0F13] border border-white/10 hover:border-brand-primary/50 hover:bg-white/5 transition text-left group">
+                                <span class="text-[10px] font-bold text-purple-400 mb-1 block uppercase tracking-wider">Teori</span>
+                                <span class="text-xs text-gray-300 group-hover:text-white">"Cari teori relevan..."</span>
+                            </button>
+                            <button @click="sendQuickPrompt('Review metode penelitian saya.')" class="p-4 rounded-xl bg-[#0E0F13] border border-white/10 hover:border-brand-primary/50 hover:bg-white/5 transition text-left group">
+                                <span class="text-[10px] font-bold text-yellow-400 mb-1 block uppercase tracking-wider">Metodologi</span>
+                                <span class="text-xs text-gray-300 group-hover:text-white">"Cek kelemahan metode..."</span>
+                            </button>
+                        </div>
+                        
+                        <div x-show="!projectId" class="mt-6 flex items-center gap-2 text-yellow-500 bg-yellow-500/10 px-4 py-2 rounded-lg border border-yellow-500/20 text-xs font-bold animate-pulse">
+                            <i data-lucide="arrow-left" class="w-4 h-4"></i> Silakan pilih proyek dulu di sidebar kiri.
+                        </div>
+                    </div>
+
+                    <div id="chat-container" class="space-y-8 px-2 pb-4"></div>
+                </div>
+            </div>
+
+            <div class="absolute bottom-6 left-0 w-full px-4 z-20">
+                <div class="max-w-3xl mx-auto">
+                    <div class="command-bar relative flex flex-col p-1">
+                        <textarea id="chat-input" rows="1" 
+                                  class="w-full bg-transparent text-white text-sm px-4 py-3 focus:outline-none resize-none custom-scroll max-h-32 placeholder-gray-600" 
+                                  placeholder="Ketik pertanyaan skripsi Anda..."
+                                  @input="adjustHeight($el)"></textarea>
+                        
+                        <div class="flex justify-between items-center px-2 pb-1">
+                            <div class="flex items-center gap-2">
+                                <button class="p-1.5 rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition" title="Upload (Coming Soon)"><i data-lucide="paperclip" class="w-4 h-4"></i></button>
+                                <button class="p-1.5 rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition" title="Image (Coming Soon)"><i data-lucide="image" class="w-4 h-4"></i></button>
+                            </div>
+                            <button id="send-btn" class="p-2 rounded-lg bg-brand-primary hover:bg-indigo-500 text-white disabled:opacity-30 disabled:cursor-not-allowed transition shadow-lg shadow-indigo-500/20" disabled>
+                                <i data-lucide="arrow-up" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-center text-[10px] text-gray-600 mt-3 font-medium">AI dapat membuat kesalahan. Verifikasi dengan dosen pembimbing.</p>
+                </div>
+            </div>
+
+        </main>
+    </div> <!-- Penutup div x-data -->
+
+    <script>
+        // Definisikan fungsi chatPageApp
+        function chatPageApp() {
+            return {
+                projectId: '',
+                projects: [],
+                selectedModel: 'fast',
+                isPro: false,
+                hasMessages: false, // Inisialisasi dari Alpine
+
+                async init() {
+                    this.isPro = document.body.getAttribute('data-user-pro') === 'true';
+                    await this.loadProjects();
+                    this.$nextTick(() => lucide.createIcons());
+                },
+
+                getModelName(code) {
+                    const names = {'fast': 'Llama 3.3', 'claude': 'Claude 3.5', 'gpt5': 'GPT-4o', 'gemini': 'Gemini 2.0'};
+                    return names[code] || 'AI';
+                },
+
+                async loadProjects() {
+                    try {
+                        const res = await fetch('/api/get-user-projects');
+                        if(res.ok) {
+                            this.projects = await res.json();
+                            if(this.projects.length > 0) this.projectId = this.projects[0].id;
+                        }
+                    } catch(e) {
+                        console.error("Gagal memuat proyek:", e);
+                    }
+                },
+
+                loadContext() { document.getElementById('chat-input').focus(); },
+
+                adjustHeight(el) {
+                    el.style.height = 'auto';
+                    el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+                    const btn = document.getElementById('send-btn');
+                    btn.disabled = el.value.trim() === "";
+                },
+
+                sendQuickPrompt(text) {
+                    if(!this.projectId) return alert("Pilih proyek dulu di sidebar kiri!");
+                    const input = document.getElementById('chat-input');
+                    input.value = text; input.focus();
+                    this.adjustHeight(input);
+                    document.getElementById('send-btn').click();
+                }
+            }
+        }
+
+        // Daftarkan fungsi sebagai Alpine data
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('chatPageApp', chatPageApp);
+        });
+
+        // Inisialisasi logika chat setelah DOM siap dan Alpine selesai menginisialisasi komponen
+        document.addEventListener('DOMContentLoaded', () => {
+            // Pastikan Alpine selesai menginisialisasi komponen sebelum melanjutkan
+            // Ini bisa dilakukan dengan menunggu Alpine secara eksplisit atau dengan
+            // menggunakan observer jika perlu. Untuk kasus ini, kita asumsikan Alpine
+            // cepat menginisialisasi. Kita tambahkan sedikit delay atau event listener
+            // untuk Alpine jika diperlukan, tapi biasanya DOMContentLoaded cukup.
+
+            const chatContainer = document.getElementById('chat-container');
+            const chatWindow = document.getElementById('chat-window');
+            const chatInput = document.getElementById('chat-input');
+            const sendBtn = document.getElementById('send-btn');
+            const converter = new showdown.Converter({ tables: true, strikethrough: true, simpleLineBreaks: true });
+
+            let isGenerating = false;
+
+            const scrollToBottom = () => {
+                chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: 'smooth' });
+            };
+
+            const createBubble = (isUser, text = "") => {
+                // Ambil data Alpine dari elemen root komponen
+                const alpineData = document.getElementById('app').__x.$data;
+
+                // Perbarui hasMessages melalui Alpine
+                if (!alpineData.hasMessages) {
+                    alpineData.hasMessages = true;
+                }
+
+                const wrapper = document.createElement('div');
+                wrapper.className = `flex w-full mb-6 ${isUser ? 'justify-end' : 'justify-start'}`;
+                
+                const bubble = document.createElement('div');
+                if (isUser) {
+                    bubble.className = `max-w-[80%] bubble-user px-5 py-3 text-sm font-medium leading-relaxed text-white`;
+                    bubble.innerText = text;
+                } else {
+                    bubble.className = `max-w-[90%] bubble-ai px-0 py-0 text-[0.95rem] prose-ai leading-relaxed w-full`;
+                    bubble.innerHTML = text || '<div class="flex items-center gap-1 h-6 ml-4"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+                }
+                
+                // Icon for AI
+                if(!isUser) {
+                    wrapper.innerHTML = `<div class="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-brand-primary mr-4 shrink-0 mt-1"><i data-lucide="sparkles" class="w-4 h-4"></i></div>`;
+                    wrapper.appendChild(bubble);
+                } else {
+                    wrapper.appendChild(bubble);
+                }
+
+                chatContainer.appendChild(wrapper);
+                lucide.createIcons();
+                scrollToBottom();
+                return bubble;
+            };
+
+            const handleSend = async () => {
+                // Akses data dari Alpine melalui $data
+                const alpineData = document.getElementById('app').__x.$data;
+                const message = chatInput.value.trim();
+
+                if (!message || isGenerating) return;
+                if (!alpineData.projectId) return alert("Pilih proyek dulu di sidebar kiri!");
+
+                chatInput.value = ''; chatInput.style.height = 'auto';
+                sendBtn.disabled = true; isGenerating = true;
+
+                // Buat bubble pengguna
+                createBubble(true, message);
+                // Buat bubble AI
+                const aiBubble = createBubble(false);
+                let fullText = "";
+
+                try {
+                    const response = await fetch('/chat/stream', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message, projectId: alpineData.projectId, model: alpineData.selectedModel }) 
+                    });
+                    if (!response.ok) throw new Error("Koneksi AI terputus.");
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        fullText += decoder.decode(value, { stream: true });
+                        aiBubble.innerHTML = converter.makeHtml(fullText);
+                        scrollToBottom();
+                    }
+                } catch (error) {
+                    console.error("Error saat mengirim pesan:", error);
+                    aiBubble.innerHTML = `<span class="text-red-400 text-xs">Error: ${error.message}</span>`;
+                } finally {
+                    isGenerating = false; chatInput.focus();
+                }
+            };
+
+            // Tambahkan event listener ke tombol kirim
+            sendBtn.addEventListener('click', handleSend);
+            // Tambahkan event listener untuk Enter di input
+            chatInput.addEventListener('keydown', (e) => { 
+                if (e.key === 'Enter' && !e.shiftKey) { 
+                    e.preventDefault(); 
+                    handleSend(); 
+                } 
+            });
+        });
+    </script>
+</body>
+</html>

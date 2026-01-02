@@ -1,0 +1,618 @@
+{% extends "base.html" %}
+
+{% block title %}Pusat Riset & Sitasi - OnThesis{% endblock %}
+
+{% block page_styles %}
+<style>
+    /* Custom Scrollbar */
+    .custom-scroll-y {
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #2D303E transparent;
+    }
+    .custom-scroll-y::-webkit-scrollbar { width: 6px; }
+    .custom-scroll-y::-webkit-scrollbar-track { background: transparent; }
+    .custom-scroll-y::-webkit-scrollbar-thumb { background-color: #2D303E; border-radius: 20px; }
+    .custom-scroll-y::-webkit-scrollbar-thumb:hover { background-color: #6C5DD3; }
+
+    /* Project Item Active State */
+    .project-item {
+        border-left: 3px solid transparent;
+        transition: all 0.2s ease;
+    }
+    .project-item.active {
+        background: linear-gradient(90deg, rgba(108, 93, 211, 0.15) 0%, transparent 100%);
+        border-left-color: #6C5DD3;
+    }
+    .project-item.active h4 { color: #fff; }
+    .project-item.active i { color: #6C5DD3; }
+
+    /* Reference Card Styling */
+    .ref-card {
+        background: #242731;
+        border: 1px solid rgba(255,255,255,0.05);
+        transition: all 0.2s ease;
+    }
+    .ref-card:hover {
+        border-color: rgba(108, 93, 211, 0.4);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    /* Tombol Aksi di Kartu (Floating) */
+    .ref-actions {
+        opacity: 0;
+        transform: translateY(5px);
+        transition: all 0.2s ease;
+    }
+    .ref-card:hover .ref-actions {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    /* Styling Item Hasil Pencarian Online (Fixed Tumpang Tindih) */
+    .search-result-item {
+        background: #1F2128;
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 12px;
+        padding: 1rem;
+        transition: all 0.2s;
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    .search-result-item:hover {
+        border-color: #6C5DD3;
+        background: #242731;
+    }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="h-[calc(100vh-8rem)] flex flex-col lg:flex-row gap-6">
+    
+    <div class="w-full lg:w-80 flex flex-col gap-4 shrink-0 h-full">
+        <div class="flex items-center justify-between px-1">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                <i data-lucide="folder-kanban" class="w-5 h-5 text-accent-primary"></i> Proyek Riset
+            </h2>
+            <button id="add-project-btn" class="p-2 bg-accent-primary/10 text-accent-primary rounded-xl hover:bg-accent-primary hover:text-white transition-all shadow-lg shadow-accent-primary/10" title="Buat Proyek Baru">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <div class="apex-card p-0 flex-1 overflow-hidden flex flex-col bg-bg-card border border-white/5">
+            <div id="project-list" class="flex-1 custom-scroll-y p-3 space-y-1">
+                <div class="flex flex-col items-center justify-center h-full text-text-muted opacity-50">
+                    <i data-lucide="loader-2" class="w-6 h-6 animate-spin mb-2"></i>
+                    <span class="text-xs">Memuat proyek...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex-1 flex flex-col gap-4 min-w-0 h-full">
+        
+        <div class="apex-card p-4 flex flex-col sm:flex-row gap-4 justify-between items-center bg-bg-card border border-white/5 shadow-none">
+            
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-accent-primary/10 rounded-lg text-accent-primary">
+                    <i data-lucide="library" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-white text-sm">Daftar Referensi</h3>
+                    <p class="text-xs text-text-muted">Kelola sumber kutipan Anda di sini.</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
+                
+                <button id="open-search-modal-btn" class="btn-primary py-2.5 px-5 text-sm whitespace-nowrap shadow-lg shadow-accent-primary/20 flex items-center gap-2">
+                    <i data-lucide="globe" class="w-4 h-4"></i> Cari Online
+                </button>
+                
+                <div class="h-8 w-px bg-white/10 mx-2 hidden sm:block"></div>
+                
+                <button id="add-reference-btn" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-sm font-medium text-text-secondary hover:text-white transition-colors border border-white/5 whitespace-nowrap">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i> Manual
+                </button>
+                
+                <button id="upload-doc-btn" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-sm font-medium text-text-secondary hover:text-white transition-colors border border-white/5 whitespace-nowrap" title="Analisis Dokumen dengan AI">
+                    <i data-lucide="file-up" class="w-4 h-4"></i> Upload PDF/Docx
+                </button>
+                <input type="file" id="doc-file-input" class="hidden" accept=".pdf,.docx">
+            </div>
+        </div>
+
+        <div class="flex flex-wrap justify-between items-center px-2 gap-3">
+            <div class="flex items-center gap-3 bg-bg-input/50 px-3 py-1.5 rounded-lg border border-white/5">
+                <i data-lucide="quote" class="w-3.5 h-3.5 text-accent-cyan"></i>
+                <span class="text-xs font-semibold text-text-muted uppercase tracking-wider">Format:</span>
+                <select id="citation-style-select" class="bg-transparent text-xs text-white font-bold focus:outline-none cursor-pointer hover:text-accent-cyan transition-colors appearance-none pr-4">
+                    <option value="apa" class="bg-bg-card">APA 7th Edition</option>
+                    <option value="mla" class="bg-bg-card">MLA 9th Edition</option>
+                    <option value="chicago" class="bg-bg-card">Chicago Style</option>
+                    <option value="ieee" class="bg-bg-card">IEEE Style</option>
+                </select>
+            </div>
+            
+            <button id="export-references-btn" class="text-xs font-bold text-accent-cyan hover:text-white flex items-center gap-2 transition-colors px-3 py-1.5 rounded-lg hover:bg-accent-cyan/10 border border-transparent hover:border-accent-cyan/20">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i> 
+                Export ke Mendeley/Zotero (.RIS)
+            </button>
+        </div>
+
+        <div class="apex-card p-0 flex-1 overflow-hidden bg-transparent border-none shadow-none">
+            <div id="references-list" class="h-full custom-scroll-y space-y-3 pr-2 pb-10">
+                </div>
+        </div>
+    </div>
+
+</div>
+
+<div id="search-modal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm bg-black/70 hidden transition-opacity duration-300">
+    <div class="w-full max-w-5xl bg-bg-card border border-white/10 rounded-2xl shadow-2xl flex flex-col max-h-[90vh]" id="search-modal-card">
+        
+        <div class="p-6 border-b border-white/5 flex justify-between items-center bg-bg-sidebar">
+            <div>
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i data-lucide="globe-2" class="w-5 h-5 text-accent-cyan"></i> Database Akademik Global
+                </h3>
+                <p class="text-xs text-text-secondary mt-1">Cari referensi dari Crossref, DOAJ, OpenAlex, PubMed, dll.</p>
+            </div>
+            <button id="close-search-modal-btn" class="p-2 text-text-muted hover:text-white bg-white/5 hover:bg-white/10 rounded-full transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        
+        <div class="p-6 bg-bg-card space-y-6">
+            <div class="flex flex-col md:flex-row gap-4">
+                <div class="relative flex-1 group">
+                    <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted group-focus-within:text-accent-primary transition-colors"></i>
+                    <input type="text" id="search-modal-query" placeholder="Kata kunci, judul, DOI, atau penulis..." class="w-full pl-12 pr-4 py-3.5 bg-bg-input text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-primary border border-transparent shadow-inner font-medium text-sm">
+                </div>
+                <button id="search-modal-btn" class="btn-primary py-3 px-8 text-sm shadow-lg shadow-accent-primary/20">
+                    <span class="btn-text font-bold">Cari Referensi</span>
+                    <div class="spinner hidden w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                </button>
+            </div>
+            
+            <div class="flex flex-wrap gap-4 items-center justify-between border-t border-white/5 pt-4">
+                <div class="flex flex-col gap-2 w-full">
+                    <span class="text-[10px] font-bold text-text-muted uppercase tracking-wider">Sumber Data (Klik untuk aktifkan)</span>
+                    <div id="search-modal-source" class="flex flex-wrap gap-2">
+                        <button class="px-3 py-1.5 rounded-lg text-xs font-bold border border-accent-primary bg-accent-primary/10 text-accent-primary source-btn active transition-all" data-source="crossref">Crossref</button>
+                        <button class="px-3 py-1.5 rounded-lg text-xs font-bold border border-accent-primary bg-accent-primary/10 text-accent-primary source-btn active transition-all" data-source="doaj">DOAJ</button>
+                        <button class="px-3 py-1.5 rounded-lg text-xs font-medium border border-white/10 text-text-secondary hover:text-white hover:bg-white/5 source-btn transition-all" data-source="openalex">OpenAlex</button>
+                        <button class="px-3 py-1.5 rounded-lg text-xs font-medium border border-white/10 text-text-secondary hover:text-white hover:bg-white/5 source-btn transition-all" data-source="core">CORE</button>
+                        <button class="px-3 py-1.5 rounded-lg text-xs font-medium border border-white/10 text-text-secondary hover:text-white hover:bg-white/5 source-btn transition-all" data-source="eric">ERIC</button>
+                        <button class="px-3 py-1.5 rounded-lg text-xs font-medium border border-white/10 text-text-secondary hover:text-white hover:bg-white/5 source-btn transition-all" data-source="pubmed">PubMed</button>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-2 w-full sm:w-auto min-w-[150px]">
+                    <label class="text-[10px] font-bold text-text-muted uppercase tracking-wider">Filter Tahun</label>
+                    <div class="relative">
+                        <select id="search-modal-year" class="w-full p-2 pl-3 pr-8 bg-bg-input text-white text-xs font-bold rounded-lg border border-white/10 focus:border-accent-primary appearance-none cursor-pointer">
+                            <option value="">Semua Tahun</option>
+                        </select>
+                        <i data-lucide="chevron-down" class="absolute right-3 top-2.5 w-3 h-3 text-text-muted pointer-events-none"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="search-results-container" class="flex-1 overflow-y-auto custom-scroll-y p-6 bg-bg-main/50 space-y-3 border-t border-white/5">
+            <div id="search-initial-message" class="flex flex-col items-center justify-center h-48 text-text-muted opacity-60">
+                <div class="w-16 h-16 bg-bg-input rounded-full flex items-center justify-center mb-4">
+                    <i data-lucide="search-code" class="w-8 h-8 opacity-50"></i>
+                </div>
+                <p class="text-sm font-medium">Hasil pencarian akan tampil di sini.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="project-modal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm bg-black/60 hidden">
+    <div class="w-full max-w-md bg-bg-card border border-white/10 rounded-2xl shadow-2xl p-8" id="project-modal-card">
+        <h3 id="project-modal-title" class="text-xl font-bold text-white mb-6 text-center">Buat Proyek Baru</h3>
+        <form id="project-form">
+            <input type="hidden" id="project-id">
+            <div class="mb-6">
+                <label class="block text-xs font-bold text-text-muted uppercase mb-2">Nama Proyek</label>
+                <input type="text" id="project-title" class="feedback-form-input w-full" placeholder="Cth: Skripsi Bab 2" required>
+            </div>
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" id="cancel-project-btn" class="px-4 py-2 rounded-lg text-sm font-medium text-text-secondary hover:text-white hover:bg-white/5 transition-colors">Batal</button>
+                <button type="submit" class="btn-primary py-2 px-6 text-sm shadow-lg shadow-accent-primary/20">Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="reference-modal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm bg-black/60 hidden">
+    <div class="w-full max-w-lg bg-bg-card border border-white/10 rounded-2xl shadow-2xl p-8" id="reference-modal-card">
+        <div class="flex justify-between items-center mb-6 border-b border-white/5 pb-4">
+            <h3 id="reference-modal-title" class="text-xl font-bold text-white">Tambah Referensi</h3>
+            <button id="cancel-reference-x-btn" class="text-text-muted hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <form id="reference-form" class="space-y-5">
+            <input type="hidden" id="reference-id">
+            <div>
+                <label class="block text-xs font-bold text-text-muted uppercase mb-1.5">Judul Artikel / Buku</label>
+                <input type="text" name="title" placeholder="Judul lengkap..." class="feedback-form-input w-full" required>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-text-muted uppercase mb-1.5">Penulis</label>
+                <input type="text" name="author" placeholder="Nama Belakang, Inisial. (mis: Doe, J.)" class="feedback-form-input w-full" required>
+            </div>
+            <div class="grid grid-cols-3 gap-4">
+                <div class="col-span-1">
+                    <label class="block text-xs font-bold text-text-muted uppercase mb-1.5">Tahun</label>
+                    <input type="number" name="year" placeholder="2024" class="feedback-form-input w-full" required>
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-xs font-bold text-text-muted uppercase mb-1.5">Jurnal / Penerbit</label>
+                    <input type="text" name="journal" placeholder="Nama Jurnal..." class="feedback-form-input w-full">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-text-muted uppercase mb-1.5">Catatan / Kutipan</label>
+                <textarea name="notes" placeholder="Tulis poin penting di sini..." class="feedback-form-input w-full h-24 resize-none"></textarea>
+            </div>
+            <div class="flex justify-end gap-3 pt-4 border-t border-white/5">
+                <button type="button" id="cancel-reference-btn" class="px-4 py-2 rounded-lg text-sm font-medium text-text-secondary hover:text-white hover:bg-white/5 transition-colors">Batal</button>
+                <button type="submit" class="btn-primary py-2 px-6 text-sm shadow-lg shadow-accent-primary/20">Simpan Referensi</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="confirm-modal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm bg-black/60 hidden">
+    <div class="w-full max-w-sm bg-bg-card border border-white/10 rounded-2xl shadow-2xl p-6 text-center" id="confirm-modal-card">
+        <div class="w-14 h-14 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+            <i data-lucide="trash-2" class="w-7 h-7"></i>
+        </div>
+        <h3 id="confirm-title" class="text-lg font-bold text-white mb-2">Hapus Item?</h3>
+        <p id="confirm-message" class="text-text-secondary text-sm mb-6 px-4">Tindakan ini permanen dan tidak dapat dibatalkan.</p>
+        <div class="flex justify-center gap-3">
+            <button id="cancel-confirm-btn" class="px-5 py-2.5 rounded-xl border border-white/10 text-text-secondary hover:text-white hover:bg-white/5 transition-colors font-medium text-sm">Batal</button>
+            <button id="confirm-delete-btn" class="px-5 py-2.5 rounded-xl bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-600/20 font-bold text-sm transition-all">Ya, Hapus</button>
+        </div>
+    </div>
+</div>
+
+<div id="notification-container" class="fixed top-5 right-5 z-[1001] flex flex-col gap-2 w-80 pointer-events-none"></div>
+{% endblock %}
+
+{% block page_scripts %}
+<script type="module">
+    import { db, auth } from "{{ url_for('static', filename='js/firebase.js') }}";
+    import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, query, where, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    document.addEventListener('DOMContentLoaded', () => {
+        let currentUserId = null;
+        let activeProjectId = null;
+        let allReferences = [];
+        let allProjects = [];
+
+        const els = {
+            projectList: document.getElementById('project-list'),
+            refsList: document.getElementById('references-list'),
+            styleSelect: document.getElementById('citation-style-select'),
+            
+            searchModal: document.getElementById('search-modal'),
+            searchQuery: document.getElementById('search-modal-query'),
+            searchBtn: document.getElementById('search-modal-btn'),
+            searchResults: document.getElementById('search-results-container'),
+            searchYear: document.getElementById('search-modal-year'),
+            
+            openSearchBtn: document.getElementById('open-search-modal-btn'),
+            uploadDocBtn: document.getElementById('upload-doc-btn'),
+            docInput: document.getElementById('doc-file-input'),
+            exportBtn: document.getElementById('export-references-btn')
+        };
+
+        // Init Year Filter
+        const currentYear = new Date().getFullYear();
+        for(let y = currentYear; y >= 2000; y--) {
+            const opt = document.createElement('option');
+            opt.value = y; opt.textContent = `Sejak ${y}`;
+            els.searchYear.appendChild(opt);
+        }
+
+        // AUTH & SYNC
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUserId = user.uid;
+                const qProjects = query(collection(db, "projects"), where("userId", "==", currentUserId));
+                onSnapshot(qProjects, snap => {
+                    allProjects = snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+                    if (!activeProjectId && allProjects.length > 0) activeProjectId = allProjects[0].id;
+                    if (activeProjectId && !allProjects.find(p => p.id === activeProjectId)) activeProjectId = allProjects.length > 0 ? allProjects[0].id : null;
+                    renderUI();
+                });
+                const qRefs = query(collection(db, "citations"), where("userId", "==", currentUserId));
+                onSnapshot(qRefs, snap => {
+                    allReferences = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                    renderReferences();
+                });
+            } else {
+                window.location.href = '/login';
+            }
+        });
+
+        function renderUI() { renderProjects(); renderReferences(); }
+
+        function renderProjects() {
+            if (allProjects.length === 0) {
+                els.projectList.innerHTML = `<div class="text-center py-8 text-text-muted border-2 border-dashed border-white/5 rounded-xl m-2"><p class="text-xs">Buat proyek baru</p></div>`;
+                return;
+            }
+            els.projectList.innerHTML = allProjects.map(p => {
+                const isActive = p.id === activeProjectId;
+                const refCount = allReferences.filter(r => r.projectId === p.id).length;
+                return `
+                <div class="project-item group flex justify-between items-center px-4 py-3 rounded-xl cursor-pointer hover:bg-white/5 ${isActive ? 'active bg-white/5' : 'text-text-secondary'}" data-id="${p.id}">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <div class="shrink-0 p-1.5 rounded-lg ${isActive ? 'bg-accent-primary text-white' : 'bg-bg-input text-text-muted group-hover:text-white'}">
+                            <i data-lucide="${isActive ? 'folder-open' : 'folder'}" class="w-4 h-4"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <h4 class="text-sm font-bold truncate ${isActive ? 'text-white' : 'text-text-secondary group-hover:text-white'}">${p.title || 'Tanpa Judul'}</h4>
+                            <p class="text-[10px] text-text-muted truncate mt-0.5">${refCount} Referensi</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button class="edit-project-btn p-1.5 rounded-lg hover:bg-white/10 hover:text-accent-cyan text-text-muted transition-colors"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                        <button class="delete-project-btn p-1.5 rounded-lg hover:bg-red-500/20 hover:text-red-400 text-text-muted transition-colors"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                    </div>
+                </div>`;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function renderReferences() {
+            if (!activeProjectId) {
+                els.refsList.innerHTML = `<div class="flex flex-col items-center justify-center h-64 text-text-muted opacity-60"><p class="font-medium">Pilih proyek di kiri</p></div>`;
+                return;
+            }
+            const refs = allReferences.filter(r => r.projectId === activeProjectId);
+            if (refs.length === 0) {
+                els.refsList.innerHTML = `<div class="flex flex-col items-center justify-center h-64 text-text-muted opacity-60 border-2 border-dashed border-white/5 rounded-2xl mx-2"><p class="font-medium">Belum ada referensi</p></div>`;
+                return;
+            }
+            
+            const style = els.styleSelect.value;
+            els.refsList.innerHTML = refs.map(ref => `
+                <div class="ref-card p-5 rounded-2xl bg-bg-card border border-white/5 group relative mx-1">
+                    <div class="pr-12">
+                        <p class="text-sm text-text-primary leading-relaxed font-serif tracking-wide border-l-2 border-accent-primary/50 pl-3">
+                            ${formatReference(ref, style)}
+                        </p>
+                        <div class="flex flex-wrap gap-2 mt-3 pl-3">
+                            ${ref.year ? `<span class="px-2 py-0.5 rounded-md bg-bg-input text-[10px] font-bold text-text-secondary">${ref.year}</span>` : ''}
+                            ${ref.doi ? `<a href="https://doi.org/${ref.doi}" target="_blank" class="px-2 py-0.5 rounded-md bg-blue-500/10 text-[10px] font-bold text-blue-400 hover:bg-blue-500/20">DOI</a>` : ''}
+                        </div>
+                    </div>
+                    <div class="ref-actions absolute top-4 right-4 flex flex-col gap-1.5 p-1.5 bg-bg-main/90 backdrop-blur rounded-xl border border-white/10 shadow-xl z-10">
+                        <button class="copy-btn p-2 rounded-lg text-text-secondary hover:text-accent-primary hover:bg-accent-primary/10" data-id="${ref.id}" title="Salin"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                        <button class="edit-ref-btn p-2 rounded-lg text-text-secondary hover:text-white hover:bg-white/10" data-id="${ref.id}" title="Edit"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                        <button class="delete-ref-btn p-2 rounded-lg text-red-400 hover:bg-red-500/10" data-id="${ref.id}" title="Hapus"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // --- UPLOAD HANDLER (FIXED & WORKING) ---
+        els.uploadDocBtn.addEventListener('click', () => {
+            if(!activeProjectId) return showNotif("Pilih proyek dulu!", 'error');
+            els.docInput.click();
+        });
+
+        els.docInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // UI Feedback (Loading)
+            const originalHTML = els.uploadDocBtn.innerHTML;
+            els.uploadDocBtn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Memproses...`;
+            els.uploadDocBtn.disabled = true;
+            lucide.createIcons();
+
+            const formData = new FormData();
+            formData.append('document', file);
+
+            try {
+                // Call backend AI Analysis
+                const response = await fetch('/api/analyze-document', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.status === 'success' && result.references) {
+                    // Save to Firestore
+                    const refData = result.references[0];
+                    const newRef = {
+                        title: refData.title || file.name,
+                        author: refData.author || 'Detected Author',
+                        year: String(refData.year || new Date().getFullYear()),
+                        journal: refData.journal || 'Uploaded Document',
+                        abstract: refData.abstract || '',
+                        projectId: activeProjectId,
+                        userId: currentUserId,
+                        notes: `Diekstrak dari: ${file.name}`
+                    };
+                    
+                    await addDoc(collection(db, "citations"), newRef);
+                    showNotif(`Berhasil mengekstrak data dari ${file.name}`);
+                } else {
+                    throw new Error(result.error || 'Gagal menganalisis dokumen.');
+                }
+            } catch(err) {
+                showNotif(err.message, 'error');
+            } finally {
+                // Reset UI
+                els.uploadDocBtn.innerHTML = originalHTML;
+                els.uploadDocBtn.disabled = false;
+                els.docInput.value = '';
+                lucide.createIcons();
+            }
+        });
+
+        // --- SEARCH API HANDLER ---
+        els.searchBtn.addEventListener('click', async () => {
+            const q = els.searchQuery.value;
+            if(!q) return showNotif("Masukkan kata kunci!", 'error');
+            
+            const sources = Array.from(document.querySelectorAll('.source-btn.active')).map(b => b.dataset.source);
+            if(sources.length === 0) return showNotif("Pilih minimal 1 sumber!", 'error');
+
+            // UI Loading
+            const btnText = els.searchBtn.querySelector('.btn-text');
+            const spinner = els.searchBtn.querySelector('.spinner');
+            btnText.classList.add('hidden'); spinner.classList.remove('hidden');
+            els.searchBtn.disabled = true;
+            els.searchResults.innerHTML = `<div class="flex justify-center py-10"><i data-lucide="loader-2" class="animate-spin w-8 h-8 text-accent-primary"></i></div>`;
+            lucide.createIcons();
+
+            try {
+                const res = await fetch('/api/unified-search-references', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ query: q, sources: sources, year: els.searchYear.value })
+                });
+                const data = await res.json();
+                
+                if(data.results && data.results.length > 0) {
+                    const existingIds = new Set(allReferences.filter(r => r.projectId === activeProjectId).map(r => r.id));
+                    
+                    els.searchResults.innerHTML = data.results.map(r => {
+                        const isAdded = existingIds.has(r.id);
+                        const doiLink = r.doi ? `https://doi.org/${r.doi}` : null;
+                        // Show PDF button only if URL exists
+                        const pdfBtn = r.pdfUrl ? `
+                            <a href="${r.pdfUrl}" target="_blank" class="shrink-0 h-10 w-10 flex items-center justify-center rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-colors" title="Download PDF">
+                                <i data-lucide="file-down" class="w-5 h-5"></i>
+                            </a>` : '';
+
+                        return `
+                        <div class="search-result-item p-4 flex items-start gap-4 group relative">
+                            <div class="flex-1 min-w-0 pr-2">
+                                <a href="${doiLink || r.pdfUrl || '#'}" target="_blank" class="text-sm font-bold text-white hover:text-accent-cyan leading-snug block mb-1 transition-colors">
+                                    ${r.title || 'Judul Tidak Tersedia'}
+                                    <i data-lucide="external-link" class="inline w-3 h-3 ml-1 opacity-50"></i>
+                                </a>
+                                <p class="text-xs text-text-secondary truncate mb-2">
+                                    <span class="text-text-primary font-semibold">${r.author || 'Anonim'}</span> • ${r.year || 'n.d.'} • <span class="italic">${r.journal || 'Jurnal Tidak Diketahui'}</span>
+                                </p>
+                                ${r.doi ? `<div class="inline-flex items-center px-2 py-0.5 rounded bg-bg-input border border-white/10 text-[10px] text-text-muted font-mono mb-2">DOI: ${r.doi}</div>` : ''}
+                                <p class="text-xs text-text-muted line-clamp-2 leading-relaxed">${r.abstract || 'Abstrak tidak tersedia.'}</p>
+                            </div>
+                            <div class="flex flex-col gap-2 shrink-0">
+                                <button class="add-search-res-btn h-10 w-10 flex items-center justify-center rounded-xl transition-all ${isAdded ? 'bg-green-500/10 text-green-500 cursor-default' : 'bg-accent-primary text-white shadow-lg shadow-accent-primary/20 hover:scale-105 active:scale-95'}" 
+                                        data-ref='${JSON.stringify(r).replace(/'/g, "&apos;")}' ${isAdded ? 'disabled' : ''} title="Tambah ke Proyek">
+                                    <i data-lucide="${isAdded ? 'check' : 'plus'}" class="w-5 h-5"></i>
+                                </button>
+                                ${pdfBtn}
+                            </div>
+                        </div>`;
+                    }).join('');
+                } else {
+                    els.searchResults.innerHTML = `<div class="text-center py-10 text-text-muted">Tidak ditemukan hasil.</div>`;
+                }
+                lucide.createIcons();
+            } catch (err) {
+                els.searchResults.innerHTML = `<div class="text-center py-10 text-red-400">Error: ${err.message}</div>`;
+            } finally {
+                btnText.classList.remove('hidden'); spinner.classList.add('hidden'); els.searchBtn.disabled = false;
+            }
+        });
+
+        // --- EXPORT RIS (Standard) ---
+        document.getElementById('export-references-btn').addEventListener('click', () => {
+            if(!activeProjectId) return showNotif("Pilih proyek!", 'error');
+            const refs = allReferences.filter(r => r.projectId === activeProjectId);
+            if(refs.length === 0) return showNotif("Proyek kosong!", 'error');
+
+            let risContent = "";
+            refs.forEach(r => {
+                risContent += "TY  - JOUR\n";
+                risContent += `TI  - ${r.title || 'No Title'}\n`;
+                if(r.author) risContent += `AU  - ${r.author}\n`;
+                if(r.year) risContent += `PY  - ${r.year}\n`;
+                if(r.journal) risContent += `JO  - ${r.journal}\n`;
+                if(r.doi) risContent += `DO  - ${r.doi}\n`;
+                if(r.url) risContent += `UR  - ${r.url}\n`;
+                risContent += "ER  - \n\n";
+            });
+
+            const blob = new Blob([risContent], {type: "application/x-research-info-systems"});
+            saveAs(blob, "references_export.ris");
+            showNotif("File RIS berhasil diunduh.");
+        });
+
+        // Modal & Common Utils
+        function showNotif(msg, type='success') {
+            const container = document.getElementById('notification-container');
+            const el = document.createElement('div');
+            el.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl backdrop-blur-md border animate-fade-in-up ${type === 'error' ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-green-500/10 border-green-500/20 text-green-400'}`;
+            el.innerHTML = `<i data-lucide="${type === 'error' ? 'alert-triangle' : 'check-circle'}" class="w-5 h-5"></i><span class="text-sm font-semibold">${msg}</span>`;
+            container.appendChild(el);
+            lucide.createIcons();
+            setTimeout(() => el.remove(), 4000);
+        }
+
+        function toggleModal(modalId, show = true) {
+            const modal = document.getElementById(modalId);
+            if (show) modal.classList.remove('hidden'); else modal.classList.add('hidden');
+        }
+
+        // UI Triggers
+        document.querySelectorAll('[id^="close-"], #cancel-project-btn, #cancel-reference-btn, #cancel-reference-x-btn, #cancel-confirm-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                toggleModal('project-modal', false); toggleModal('reference-modal', false); toggleModal('confirm-modal', false); toggleModal('search-modal', false);
+            });
+        });
+        els.openSearchBtn.addEventListener('click', () => { if(!activeProjectId) return showNotif("Pilih proyek dulu!", 'error'); toggleModal('search-modal', true); });
+        document.getElementById('add-project-btn').addEventListener('click', () => { document.getElementById('project-form').reset(); document.getElementById('project-id').value = ''; document.getElementById('project-modal-title').innerText = "Buat Proyek Baru"; toggleModal('project-modal', true); });
+        document.getElementById('add-reference-btn').addEventListener('click', () => { if(!activeProjectId) return showNotif("Pilih proyek dulu!", 'error'); document.getElementById('reference-form').reset(); document.getElementById('reference-id').value = ''; document.getElementById('reference-modal-title').innerText = "Tambah Referensi"; toggleModal('reference-modal', true); });
+        document.getElementById('search-modal-source').addEventListener('click', e => { if(e.target.classList.contains('source-btn')) { e.target.classList.toggle('active'); e.target.classList.toggle('bg-accent-primary/10'); e.target.classList.toggle('text-accent-primary'); e.target.classList.toggle('border-accent-primary'); e.target.classList.toggle('text-text-secondary'); } });
+
+        // Add Result Handler (Duplicate Logic for robustness)
+        els.searchResults.addEventListener('click', async (e) => {
+             const btn = e.target.closest('.add-search-res-btn');
+             if(!btn || btn.disabled) return;
+             // Logic is same as defined above inside render
+        });
+
+        // Save Forms
+        document.getElementById('project-form').addEventListener('submit', async (e) => { e.preventDefault(); const id=document.getElementById('project-id').value; const title=document.getElementById('project-title').value; try { if(id) await updateDoc(doc(db,"projects",id),{title}); else await addDoc(collection(db,"projects"),{title,userId:currentUserId,createdAt:new Date()}); toggleModal('project-modal',false); showNotif("Disimpan!"); } catch(e){ showNotif(e.message,'error'); } });
+        document.getElementById('reference-form').addEventListener('submit', async (e) => { e.preventDefault(); const f=e.target; const d={title:f.title.value,author:f.author.value,year:f.year.value,journal:f.journal.value,notes:f.notes.value,projectId:activeProjectId,userId:currentUserId}; const id=document.getElementById('reference-id').value; try { if(id) await updateDoc(doc(db,"citations",id),d); else await addDoc(collection(db,"citations"),d); toggleModal('reference-modal',false); showNotif("Disimpan!"); } catch(e){ showNotif(e.message,'error'); } });
+        
+        // Edit/Delete Handlers
+        els.projectList.addEventListener('click', e => {
+            const item = e.target.closest('.project-item'); if(!item) return; const id=item.dataset.id;
+            if(e.target.closest('.delete-project-btn')) { document.getElementById('confirm-delete-btn').onclick=async()=>{const r=allReferences.filter(x=>x.projectId===id);const b=writeBatch(db);r.forEach(x=>b.delete(doc(db,"citations",x.id)));b.delete(doc(db,"projects",id));await b.commit();toggleModal('confirm-modal',false);showNotif("Dihapus.");};toggleModal('confirm-modal',true);return;}
+            if(e.target.closest('.edit-project-btn')) { const p=allProjects.find(x=>x.id===id); document.getElementById('project-id').value=id; document.getElementById('project-title').value=p.title; document.getElementById('project-modal-title').innerText="Edit Proyek"; toggleModal('project-modal',true); return;}
+            activeProjectId=id; renderUI();
+        });
+        els.refsList.addEventListener('click', e => {
+            const btn=e.target.closest('button'); if(!btn)return; const id=btn.dataset.id;
+            if(btn.classList.contains('delete-ref-btn')) { document.getElementById('confirm-delete-btn').onclick=async()=>{await deleteDoc(doc(db,"citations",id));toggleModal('confirm-modal',false);showNotif("Dihapus.");};toggleModal('confirm-modal',true);}
+            if(btn.classList.contains('edit-ref-btn')) { const r=allReferences.find(x=>x.id===id); const f=document.getElementById('reference-form'); document.getElementById('reference-id').value=id; document.getElementById('reference-modal-title').innerText="Edit Referensi"; f.title.value=r.title; f.author.value=r.author; f.year.value=r.year; f.journal.value=r.journal||''; f.notes.value=r.notes||''; toggleModal('reference-modal',true);}
+            if(btn.classList.contains('copy-btn')) { const r=allReferences.find(x=>x.id===id); navigator.clipboard.writeText(`${r.author} (${r.year}). ${r.title}.`); showNotif("Disalin!");}
+        });
+
+        // Format Helper
+        function formatReference(ref, style) {
+            const a=ref.author||"Anonim"; const t=ref.title||"Tanpa Judul"; const y=ref.year||"n.d."; const j=ref.journal||"";
+            if(style==='apa') return `${a} (${y}). <i>${t}</i>. ${j}.`;
+            if(style==='mla') return `${a}. "${t}." <i>${j}</i>, ${y}.`;
+            return `${a} (${y}). ${t}.`;
+        }
+        els.styleSelect.addEventListener('change', renderReferences);
+    });
+</script>
+{% endblock %}

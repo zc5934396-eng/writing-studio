@@ -1,0 +1,406 @@
+{% extends "base.html" %}
+
+{% block title %}Manajemen Proyek - OnThesis{% endblock %}
+
+{% block page_styles %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .flatpickr-calendar {
+        background: #242731 !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.4) !important;
+        border-radius: 1rem !important;
+        padding: 0.5rem !important;
+    }
+    .flatpickr-day { color: #808191 !important; border-radius: 0.5rem !important; }
+    .flatpickr-day.selected, .flatpickr-day:hover {
+        background: #6C5DD3 !important;
+        border-color: #6C5DD3 !important;
+        color: #fff !important;
+    }
+    .flatpickr-months .flatpickr-month { color: #fff !important; fill: #fff !important; }
+    .flatpickr-current-month .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month { background-color: #242731; }
+    .flatpickr-weekdays { background: transparent !important; }
+    span.flatpickr-weekday { color: #5F616B !important; }
+    
+    /* Skeleton Loading khusus Dark Mode */
+    .skeleton {
+        background: rgba(255, 255, 255, 0.05);
+        background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.05) 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+        border-radius: 0.375rem;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+</style>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div x-data="projectsApp()" x-cloak @firebase-ready.window="initFirebase($event.detail)">
+    
+    <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-white tracking-tight">Manajemen Proyek</h1>
+            <p class="text-text-secondary mt-1">Atur semua skripsi, tesis, dan penelitianmu dalam satu tempat.</p>
+        </div>
+        <button @click="openModal()" class="btn-primary group shadow-lg shadow-accent-primary/20 whitespace-nowrap">
+            <i data-lucide="plus" class="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform"></i> Proyek Baru
+        </button>
+    </header>
+
+    <div class="space-y-4">
+        
+        <template x-if="loading">
+            <div class="space-y-4">
+                <div class="apex-card p-6 border border-white/5 bg-bg-card">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full skeleton shrink-0"></div>
+                        <div class="flex-grow space-y-2">
+                            <div class="h-5 w-1/3 skeleton"></div>
+                            <div class="h-4 w-1/4 skeleton"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <template x-if="!loading && projects.length === 0">
+            <div class="py-20 flex flex-col items-center justify-center text-center border-2 border-dashed border-white/5 rounded-3xl bg-white/[0.02]">
+                <div class="w-20 h-20 bg-bg-input rounded-full flex items-center justify-center mb-6 text-text-muted">
+                    <i data-lucide="folder-open" class="w-10 h-10 opacity-50"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">Belum ada proyek</h3>
+                <p class="text-text-secondary mb-6 max-w-xs mx-auto">Mulai perjalanan skripsimu dengan membuat proyek pertamamu.</p>
+                <button @click="openModal()" class="px-6 py-2.5 rounded-xl border border-accent-primary text-accent-primary hover:bg-accent-primary hover:text-white transition-all font-medium text-sm">
+                    Buat Proyek
+                </button>
+            </div>
+        </template>
+
+        <template x-for="project in projects" :key="project.id">
+            <div class="apex-card p-0 hover:border-accent-primary/30 transition-all duration-300 group relative overflow-hidden bg-bg-card">
+                
+                <div class="p-6 flex flex-col md:flex-row gap-6 md:items-center">
+                    
+                    <div class="flex items-start gap-5 flex-grow min-w-0">
+                        <div class="relative w-14 h-14 flex-shrink-0">
+                            <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                                <path class="text-bg-input" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3"></path>
+                                <path class="text-accent-primary transition-all duration-1000 ease-out" 
+                                      stroke-dasharray="100, 100" 
+                                      :stroke-dashoffset="100 - (project.progress || 0)" 
+                                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" 
+                                      fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-[10px] font-bold text-white" x-text="(project.progress || 0) + '%'"></span>
+                            </div>
+                        </div>
+
+                        <div class="min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                                <h4 class="font-bold text-white text-lg truncate" x-text="project.title"></h4>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-bg-input text-text-secondary border border-white/5 uppercase tracking-wider" x-text="project.status || 'DRAFT'"></span>
+                            </div>
+                            
+                            <div class="flex items-center gap-4 text-sm text-text-secondary">
+                                <div class="flex items-center gap-1.5" title="Tanggal Mulai - Selesai">
+                                    <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                                    <span x-text="formatDate(project.startDate)"></span> 
+                                    <span class="text-white/20">&rarr;</span> 
+                                    <span x-text="formatDate(project.endDate)"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex-shrink-0 md:text-right pl-16 md:pl-0">
+                        <p class="text-xs text-text-secondary mb-1">Status Waktu</p>
+                        <span class="font-bold text-xs px-3 py-1.5 rounded-lg border" 
+                              :class="getDuration(project.startDate, project.endDate).class"
+                              x-text="getDuration(project.startDate, project.endDate).text">
+                        </span>
+                    </div>
+
+                    <div class="flex items-center gap-2 md:pl-6 md:border-l md:border-white/5 pl-16 md:ml-0 pt-4 md:pt-0 border-t border-white/5 md:border-t-0">
+                        <button @click="openModal(project)" class="p-2 rounded-lg text-text-secondary hover:text-white hover:bg-white/5 transition-colors" title="Edit">
+                            <i data-lucide="pencil" class="w-4 h-4"></i>
+                        </button>
+                        <button @click="confirmDelete(project.id)" class="p-2 rounded-lg text-text-secondary hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Hapus">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="bg-bg-input/50 px-6 py-2 flex items-center gap-4 border-t border-white/5">
+                    <span class="text-[10px] uppercase font-bold text-text-muted">Update Progress</span>
+                    <input type="range" min="0" max="100" x-model="project.progress" 
+                           @change="updateProgress(project.id, $event.target.value)"
+                           class="w-full h-1.5 bg-bg-main rounded-full appearance-none cursor-pointer accent-accent-primary hover:accent-accent-hover">
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <template x-teleport="body">
+        <div x-show="showModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm bg-black/60 transition-opacity" 
+             style="display: none;">
+            
+            <div class="w-full max-w-lg bg-bg-card border border-white/10 rounded-3xl shadow-2xl p-8 relative transform transition-all"
+                 @click.away="closeModal()"
+                 x-show="showModal"
+                 x-transition:enter="ease-out duration-300"
+                 x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave="ease-in duration-200"
+                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-4 scale-95">
+                
+                <div class="flex justify-between items-center mb-8">
+                    <h3 class="text-2xl font-bold text-white" x-text="isEdit ? 'Edit Proyek' : 'Proyek Baru'"></h3>
+                    <button @click="closeModal()" class="text-text-secondary hover:text-white bg-bg-input hover:bg-white/10 p-2 rounded-full transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <form @submit.prevent="saveProject">
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-xs font-bold text-text-muted uppercase mb-2">Judul Proyek</label>
+                            <input type="text" x-model="form.title" class="feedback-form-input w-full" placeholder="Cth: Skripsi Bab 1..." required>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-text-muted uppercase mb-2">Tanggal Mulai</label>
+                                <div class="relative">
+                                    <input x-ref="startDatePicker" type="text" class="feedback-form-input w-full cursor-pointer pl-10" placeholder="Pilih..." required>
+                                    <i data-lucide="calendar" class="absolute left-3 top-3 w-4 h-4 text-text-secondary pointer-events-none"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-text-muted uppercase mb-2">Deadline</label>
+                                <div class="relative">
+                                    <input x-ref="endDatePicker" type="text" class="feedback-form-input w-full cursor-pointer pl-10" placeholder="Pilih..." required>
+                                    <i data-lucide="flag" class="absolute left-3 top-3 w-4 h-4 text-text-secondary pointer-events-none"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-text-muted uppercase mb-2">Status</label>
+                                <div class="relative">
+                                    <select x-model="form.status" class="feedback-form-input w-full appearance-none cursor-pointer">
+                                        <option value="DRAFT">Draft</option>
+                                        <option value="ON GOING">On Going</option>
+                                        <option value="REVISI">Revisi</option>
+                                        <option value="SELESAI">Selesai</option>
+                                    </select>
+                                    <i data-lucide="chevron-down" class="absolute right-3 top-3.5 w-4 h-4 text-text-secondary pointer-events-none"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-text-muted uppercase mb-2">Progress (%)</label>
+                                <input type="number" x-model="form.progress" class="feedback-form-input w-full" min="0" max="100">
+                            </div>
+                        </div>
+                        
+                        <div class="pt-6 flex justify-end gap-3 border-t border-white/5 mt-2">
+                            <button type="button" @click="closeModal()" class="px-5 py-2.5 rounded-xl border border-white/10 text-text-secondary hover:text-white hover:bg-white/5 transition-colors font-medium text-sm">Batal</button>
+                            <button type="submit" class="btn-primary px-6 py-2.5 text-sm shadow-lg shadow-accent-primary/20" :disabled="isSaving">
+                                <span x-text="isSaving ? 'Menyimpan...' : 'Simpan Proyek'"></span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </template>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+    function projectsApp() {
+        return {
+            loading: true,
+            projects: [],
+            showModal: false,
+            isEdit: false,
+            isSaving: false,
+            currentId: null,
+            form: { title: '', status: 'DRAFT', progress: 0, startDate: '', endDate: '' },
+            fpStart: null,
+            fpEnd: null,
+            
+            // Firebase
+            db: null,
+            auth: null,
+            sdk: null,
+
+            init() {
+                console.log("Alpine Initialized");
+            },
+
+            initFirebase(detail) {
+                this.db = detail.db;
+                this.auth = detail.auth;
+                this.sdk = detail.sdk;
+
+                this.auth.onAuthStateChanged(user => {
+                    if (user) {
+                        this.fetchProjects(user.uid);
+                    } else {
+                        window.location.href = '/login';
+                    }
+                });
+            },
+
+            fetchProjects(uid) {
+                if(!this.db) return;
+                const { collection, query, where, onSnapshot, orderBy } = this.sdk;
+                
+                // Fallback query tanpa index (untuk menghindari error di awal)
+                const qFallback = query(collection(this.db, "projects"), where("userId", "==", uid));
+                
+                onSnapshot(qFallback, (snapshot) => {
+                    // Sorting manual di client side agar tidak error index
+                    this.projects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+                        .sort((a,b) => (b.lastUpdated?.seconds || 0) - (a.lastUpdated?.seconds || 0));
+                    this.loading = false;
+                    this.$nextTick(() => window.lucide && lucide.createIcons());
+                });
+            },
+
+            openModal(project = null) {
+                this.isEdit = !!project;
+                this.showModal = true;
+                
+                if (project) {
+                    this.currentId = project.id;
+                    this.form = {
+                        title: project.title,
+                        status: project.status || 'DRAFT',
+                        progress: project.progress || 0,
+                        startDate: project.startDate?.toDate ? project.startDate.toDate() : new Date(),
+                        endDate: project.endDate?.toDate ? project.endDate.toDate() : new Date()
+                    };
+                } else {
+                    this.currentId = null;
+                    this.form = { title: '', status: 'DRAFT', progress: 0, startDate: new Date(), endDate: new Date() };
+                }
+
+                this.$nextTick(() => {
+                    // Re-init Flatpickr agar muncul di dalam modal dengan benar
+                    if(this.fpStart) this.fpStart.destroy();
+                    if(this.fpEnd) this.fpEnd.destroy();
+                    
+                    const config = {
+                        dateFormat: "Y-m-d", altInput: true, altFormat: "j F Y",
+                        theme: "dark",
+                        disableMobile: "true", // Paksa tampilan desktop agar theme dark jalan
+                        static: true // Agar kalender nempel di input, gak ketutup modal
+                    };
+
+                    setTimeout(() => {
+                        if(this.$refs.startDatePicker) {
+                            this.fpStart = flatpickr(this.$refs.startDatePicker, {
+                                ...config,
+                                defaultDate: this.form.startDate,
+                                onChange: (selectedDates) => { this.form.startDate = selectedDates[0]; }
+                            });
+                        }
+                        if(this.$refs.endDatePicker) {
+                            this.fpEnd = flatpickr(this.$refs.endDatePicker, {
+                                ...config,
+                                defaultDate: this.form.endDate,
+                                onChange: (selectedDates) => { this.form.endDate = selectedDates[0]; }
+                            });
+                        }
+                    }, 100);
+                });
+            },
+
+            closeModal() { this.showModal = false; },
+
+            async saveProject() {
+                if(!this.db) return alert("Database belum siap.");
+                
+                const { collection, addDoc, doc, updateDoc, serverTimestamp, Timestamp } = this.sdk;
+                this.isSaving = true;
+                
+                try {
+                    const payload = {
+                        title: this.form.title,
+                        status: this.form.status,
+                        progress: parseInt(this.form.progress),
+                        startDate: this.form.startDate instanceof Date ? Timestamp.fromDate(this.form.startDate) : serverTimestamp(),
+                        endDate: this.form.endDate instanceof Date ? Timestamp.fromDate(this.form.endDate) : serverTimestamp(),
+                        userId: this.auth.currentUser.uid,
+                        lastUpdated: serverTimestamp()
+                    };
+
+                    if (this.isEdit && this.currentId) {
+                        await updateDoc(doc(this.db, "projects", this.currentId), payload);
+                    } else {
+                        payload.createdAt = serverTimestamp();
+                        await addDoc(collection(this.db, "projects"), payload);
+                    }
+                    this.closeModal();
+                } catch (e) {
+                    alert("Error: " + e.message);
+                } finally {
+                    this.isSaving = false;
+                }
+            },
+
+            async updateProgress(id, val) {
+                if(!this.db) return;
+                const { doc, updateDoc, serverTimestamp } = this.sdk;
+                try {
+                    await updateDoc(doc(this.db, "projects", id), { progress: parseInt(val), lastUpdated: serverTimestamp() });
+                } catch (e) { console.error(e); }
+            },
+
+            async confirmDelete(id) {
+                if(!this.db) return;
+                if(confirm("Hapus proyek ini permanen?")) {
+                    const { doc, deleteDoc } = this.sdk;
+                    try { await deleteDoc(doc(this.db, "projects", id)); } catch (e) { console.error(e); }
+                }
+            },
+
+            formatDate(ts) {
+                if(!ts) return '-';
+                const date = ts.toDate ? ts.toDate() : new Date(ts);
+                return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
+            },
+
+            getDuration(startTs, endTs) {
+                if (!startTs || !endTs) return { text: '-', class: '' };
+                const end = endTs.toDate ? endTs.toDate() : new Date(endTs);
+                const now = new Date();
+                now.setHours(0,0,0,0); end.setHours(0,0,0,0);
+                const diffDays = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+                
+                // Styling khusus dark mode (Warna Teks & Border)
+                if (diffDays < 0) return { text: 'Selesai', class: 'text-green-400 border-green-500/30 bg-green-500/10' };
+                if (diffDays === 0) return { text: 'Hari Ini', class: 'text-red-400 border-red-500/30 bg-red-500/10' };
+                return { text: `Sisa ${diffDays} hari`, class: 'text-accent-cyan border-accent-cyan/30 bg-accent-cyan/10' };
+            }
+        };
+    }
+</script>
+
+<script type="module">
+    import { db, auth } from "{{ url_for('static', filename='js/firebase.js') }}";
+    import * as FirestoreSDK from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const evt = new CustomEvent('firebase-ready', { 
+        detail: { db, auth, sdk: FirestoreSDK } 
+    });
+    window.dispatchEvent(evt);
+</script>
+{% endblock %}

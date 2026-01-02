@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+
+{% block title %}Profil Saya - OnThesis{% endblock %}
+
+{% block page_styles %}
+<style>
+    /* --- PROFILE HEADER CARD --- */
+    .profile-header {
+        background: linear-gradient(135deg, rgba(30, 32, 38, 0.9) 0%, rgba(20, 22, 27, 0.95) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 24px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    /* Background Glow Animation */
+    .profile-header::before {
+        content: '';
+        position: absolute;
+        top: -50%; left: -50%; width: 200%; height: 200%;
+        background: radial-gradient(circle at center, rgba(108, 93, 211, 0.15) 0%, transparent 50%);
+        animation: rotate 20s linear infinite;
+        pointer-events: none;
+    }
+    @keyframes rotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Avatar Glow */
+    .avatar-wrapper {
+        position: relative;
+        padding: 4px;
+        background: linear-gradient(135deg, #6C5DD3, #00D1FF);
+        border-radius: 50%;
+        box-shadow: 0 0 30px rgba(108, 93, 211, 0.4);
+    }
+    .avatar-img {
+        border: 4px solid #121417;
+        border-radius: 50%;
+        background-color: #121417;
+    }
+
+    /* --- SECTION CARDS --- */
+    .setting-card {
+        background: #1E2026;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        padding: 2rem;
+        transition: all 0.3s ease;
+    }
+    .setting-card:hover {
+        border-color: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Input Fields Modern */
+    .modern-input {
+        background: #13151a;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        border-radius: 12px;
+        padding: 12px 16px;
+        width: 100%;
+        transition: all 0.3s;
+    }
+    .modern-input:focus {
+        outline: none;
+        border-color: #6C5DD3;
+        box-shadow: 0 0 0 3px rgba(108, 93, 211, 0.2);
+        background: #181a20;
+    }
+    .modern-input:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    /* Badge Styles */
+    .badge-pro {
+        background: linear-gradient(90deg, #6C5DD3, #00D1FF);
+        color: white;
+        font-size: 0.7rem; font-weight: 800; padding: 4px 12px;
+        border-radius: 20px; text-transform: uppercase; letter-spacing: 1px;
+        box-shadow: 0 4px 15px rgba(108, 93, 211, 0.4);
+    }
+    .badge-free {
+        background: rgba(255, 255, 255, 0.1);
+        color: #94a3b8;
+        font-size: 0.7rem; font-weight: 800; padding: 4px 12px;
+        border-radius: 20px; text-transform: uppercase; letter-spacing: 1px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto pb-20" x-data="profileApp">
+    
+    <div class="profile-header p-8 mb-8 flex flex-col md:flex-row items-center gap-8 relative z-10">
+        
+        <div class="avatar-wrapper shrink-0">
+            <img src="{{ current_user.photo_url or 'https://ui-avatars.com/api/?name=' + (current_user.username|urlencode) + '&background=random&size=128' }}" 
+                 alt="Profile Picture" 
+                 class="w-32 h-32 object-cover avatar-img">
+        </div>
+
+        <div class="flex-1 text-center md:text-left">
+            <div class="flex flex-col md:flex-row items-center gap-3 mb-2">
+                <h1 class="text-3xl font-bold text-white tracking-tight">{{ current_user.username }}</h1>
+                {% if current_user.is_pro %}
+                    <span class="badge-pro">PRO MEMBER</span>
+                {% else %}
+                    <span class="badge-free">FREE PLAN</span>
+                {% endif %}
+            </div>
+            <p class="text-text-secondary text-sm mb-6">{{ current_user.email }}</p>
+            
+            <div class="flex items-center justify-center md:justify-start gap-8">
+                <div>
+                    <p class="text-xs text-text-muted uppercase font-bold tracking-wider mb-1">Proyek</p>
+                    <p class="text-xl font-bold text-white flex items-center gap-2">
+                        <i data-lucide="folder-open" class="w-4 h-4 text-accent-primary"></i> <span x-text="stats.projects">0</span>
+                    </p>
+                </div>
+                <div>
+                    <p class="text-xs text-text-muted uppercase font-bold tracking-wider mb-1">Referensi</p>
+                    <p class="text-xl font-bold text-white flex items-center gap-2">
+                        <i data-lucide="book-open" class="w-4 h-4 text-accent-cyan"></i> <span x-text="stats.references">0</span>
+                    </p>
+                </div>
+                <div>
+                    <p class="text-xs text-text-muted uppercase font-bold tracking-wider mb-1">Bergabung</p>
+                    <p class="text-xl font-bold text-white flex items-center gap-2">
+                        <i data-lucide="calendar" class="w-4 h-4 text-text-secondary"></i> 
+                        <span>{{ current_user.created_at.strftime('%d %b %Y') if current_user.created_at else 'Baru Saja' }}</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-3 shrink-0 w-full md:w-auto">
+            <button @click="editMode = !editMode" class="btn-secondary w-full justify-center border-white/10 hover:bg-white/5">
+                <i data-lucide="settings" class="w-4 h-4"></i> Edit Profil
+            </button>
+            <a href="{{ url_for('auth.logout') }}" class="btn-secondary w-full justify-center border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300">
+                <i data-lucide="log-out" class="w-4 h-4"></i> Keluar
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <div class="lg:col-span-2 space-y-8">
+            
+            <div class="setting-card">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i data-lucide="user" class="w-5 h-5 text-accent-primary"></i> Informasi Pribadi
+                    </h3>
+                    <span x-show="editMode" class="text-xs text-accent-cyan animate-pulse">Mode Edit Aktif</span>
+                </div>
+                
+                <form @submit.prevent="updateProfile">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="col-span-2">
+                            <label class="block text-xs font-bold text-text-muted uppercase mb-2">Nama Lengkap</label>
+                            <input type="text" x-model="form.displayName" :disabled="!editMode" class="modern-input" placeholder="Nama Anda">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-text-muted uppercase mb-2">Email</label>
+                            <input type="email" value="{{ current_user.email }}" disabled class="modern-input opacity-50 cursor-not-allowed">
+                            <p class="text-[10px] text-text-muted mt-1">*Email tidak dapat diubah.</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-text-muted uppercase mb-2">Nomor WhatsApp (Opsional)</label>
+                            <input type="tel" x-model="form.phone" :disabled="!editMode" class="modern-input" placeholder="+62...">
+                        </div>
+                    </div>
+
+                    <div x-show="editMode" x-transition class="mt-6 flex justify-end pt-4 border-t border-white/5">
+                        <button type="submit" class="btn-primary shadow-lg shadow-accent-primary/20" :disabled="isSaving">
+                            <span x-show="!isSaving">Simpan Perubahan</span>
+                            <span x-show="isSaving" class="flex items-center gap-2"><i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Menyimpan...</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="setting-card border-red-500/10">
+                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <i data-lucide="shield-alert" class="w-5 h-5 text-red-400"></i> Area Berbahaya
+                </h3>
+                <p class="text-sm text-text-secondary mb-6">Tindakan di bawah ini tidak dapat dibatalkan. Harap berhati-hati.</p>
+                <div class="flex items-center justify-between p-4 rounded-xl bg-red-500/5 border border-red-500/10">
+                    <div>
+                        <p class="text-sm font-bold text-red-200">Hapus Akun</p>
+                        <p class="text-xs text-red-200/60">Menghapus semua data proyek & referensi permanen.</p>
+                    </div>
+                    <button @click="deleteAccount" class="px-4 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-colors text-xs font-bold border border-red-500/20">
+                        Hapus Akun
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="lg:col-span-1 space-y-8">
+            
+            <div class="setting-card relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <i data-lucide="credit-card" class="w-32 h-32 text-white"></i>
+                </div>
+
+                <h3 class="text-lg font-bold text-white mb-6 relative z-10">Langganan Saya</h3>
+                
+                <div class="space-y-6 relative z-10">
+                    <div>
+                        <p class="text-xs text-text-muted uppercase font-bold tracking-wider mb-1">Paket Saat Ini</p>
+                        <p class="text-2xl font-black text-white tracking-tight">
+                            {{ 'MONTHLY PRO' if current_user.is_pro else 'FREE TIER' }}
+                        </p>
+                    </div>
+
+                    {% if current_user.is_pro %}
+                    <div>
+                        <p class="text-xs text-text-muted uppercase font-bold tracking-wider mb-1">Status</p>
+                        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 text-green-400 text-xs font-bold border border-green-500/20">
+                            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> AKTIF
+                        </span>
+                    </div>
+                    <div>
+                        <p class="text-xs text-text-muted uppercase font-bold tracking-wider mb-1">Berakhir Pada</p>
+                        <p class="text-sm text-white">30 Desember 2025</p> </div>
+                    <button class="w-full py-3 rounded-xl border border-white/10 hover:bg-white/5 text-text-secondary hover:text-white text-sm font-bold transition-all">
+                        Kelola Langganan
+                    </button>
+                    {% else %}
+                    <div class="p-4 rounded-xl bg-accent-primary/10 border border-accent-primary/20">
+                        <p class="text-xs text-accent-primary mb-2">Upgrade ke PRO untuk akses unlimited ke semua fitur AI.</p>
+                        <a href="{{ url_for('main.upgrade_page') }}" class="block w-full py-2.5 rounded-lg bg-accent-primary hover:bg-accent-hover text-white text-center text-xs font-bold shadow-lg shadow-accent-primary/20 transition-all">
+                            Upgrade Sekarang 🚀
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="p-6 rounded-2xl bg-gradient-to-br from-bg-card to-[#15171e] border border-white/5 text-center">
+                <div class="w-12 h-12 bg-bg-input rounded-full flex items-center justify-center mx-auto mb-4 text-text-secondary">
+                    <i data-lucide="help-circle" class="w-6 h-6"></i>
+                </div>
+                <h4 class="text-white font-bold mb-1">Butuh Bantuan?</h4>
+                <p class="text-xs text-text-secondary mb-4">Hubungi tim support kami jika ada masalah akun.</p>
+                <a href="mailto:support@onthesis.com" class="text-accent-cyan hover:text-white text-xs font-bold transition-colors">
+                    support@onthesis.com
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script type="module">
+    import { db, auth } from "{{ url_for('static', filename='js/firebase.js') }}";
+    import { doc, updateDoc, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('profileApp', () => ({
+            editMode: false,
+            isSaving: false,
+            stats: { projects: 0, references: 0 },
+            form: {
+                displayName: '{{ current_user.username }}',
+                phone: '' // Nanti ambil dari DB kalau ada
+            },
+            uid: null,
+
+            init() {
+                auth.onAuthStateChanged(user => {
+                    if (user) {
+                        this.uid = user.uid;
+                        this.fetchStats();
+                    }
+                });
+            },
+
+            fetchStats() {
+                // Realtime Stats Count
+                onSnapshot(query(collection(db, "projects"), where("userId", "==", this.uid)), s => this.stats.projects = s.size);
+                onSnapshot(query(collection(db, "citations"), where("userId", "==", this.uid)), s => this.stats.references = s.size);
+            },
+
+            async updateProfile() {
+                if(!this.uid) return;
+                this.isSaving = true;
+                try {
+                    await updateDoc(doc(db, "users", this.uid), {
+                        displayName: this.form.displayName,
+                        phoneNumber: this.form.phone
+                    });
+                    this.editMode = false;
+                    // Optional: Show toast notification
+                    alert("Profil berhasil diperbarui!");
+                } catch(e) {
+                    console.error(e);
+                    alert("Gagal update profil.");
+                } finally {
+                    this.isSaving = false;
+                }
+            },
+
+            deleteAccount() {
+                if(confirm("PERINGATAN: Apakah Anda yakin ingin menghapus akun permanen? Semua data akan hilang.")) {
+                    alert("Fitur hapus akun sedang diproses admin. Silakan hubungi support.");
+                }
+            }
+        }));
+    });
+</script>
+{% endblock %}

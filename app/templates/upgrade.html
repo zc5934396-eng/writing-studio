@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+
+{% block title %}Upgrade Pro - OnThesis{% endblock %}
+
+{% block page_styles %}
+<script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ midtrans_client_key }}"></script>
+
+<style>
+    /* --- TOGGLE SWITCH ANIMATION --- */
+    .toggle-container {
+        background: #13151a;
+        padding: 6px;
+        border-radius: 16px;
+        display: inline-flex;
+        position: relative;
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+    }
+    .toggle-btn {
+        padding: 12px 32px;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #64748b;
+        position: relative;
+        z-index: 2;
+        transition: color 0.3s ease;
+    }
+    .toggle-btn:hover { color: #94a3b8; }
+    .toggle-btn.active { color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+    
+    .toggle-bg {
+        position: absolute;
+        top: 6px; left: 6px; bottom: 6px;
+        width: calc(50% - 6px);
+        background: linear-gradient(135deg, #6C5DD3 0%, #4F46E5 100%);
+        border-radius: 12px;
+        transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        z-index: 1;
+        box-shadow: 0 4px 15px rgba(108, 93, 211, 0.4);
+    }
+    .toggle-container[data-state="monthly"] .toggle-bg { transform: translateX(100%); }
+
+    /* --- PRICING CARDS --- */
+    .pricing-card {
+        background: rgba(30, 32, 38, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(12px);
+        border-radius: 24px;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+    }
+    .pricing-card:hover {
+        transform: translateY(-10px);
+        border-color: rgba(108, 93, 211, 0.3);
+        box-shadow: 0 20px 50px -10px rgba(0,0,0,0.6);
+        background: rgba(30, 32, 38, 0.7);
+    }
+
+    /* BEST SELLER HIGHLIGHT */
+    .pricing-card.popular {
+        background: linear-gradient(180deg, rgba(108, 93, 211, 0.08) 0%, rgba(30, 32, 38, 0.8) 100%);
+        border: 2px solid #6C5DD3;
+        box-shadow: 0 0 50px -10px rgba(108, 93, 211, 0.25);
+        transform: scale(1.05);
+        z-index: 10;
+    }
+    .pricing-card.popular:hover {
+        transform: scale(1.05) translateY(-10px);
+        box-shadow: 0 25px 60px -10px rgba(108, 93, 211, 0.5);
+    }
+
+    /* Badges */
+    .badge-popular {
+        position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+        background: #6C5DD3; color: white;
+        font-size: 0.7rem; font-weight: 800; padding: 8px 20px;
+        border-radius: 0 0 16px 16px; text-transform: uppercase; letter-spacing: 1.5px;
+        box-shadow: 0 4px 20px rgba(108, 93, 211, 0.6);
+        white-space: nowrap;
+    }
+    
+    .badge-save {
+        background: rgba(16, 185, 129, 0.15); color: #34d399;
+        font-size: 0.65rem; font-weight: 800; padding: 4px 10px;
+        border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    /* Typography */
+    .price-amount { font-size: 2.5rem; font-weight: 800; color: white; letter-spacing: -1.5px; }
+    .price-period { font-size: 1rem; color: #94a3b8; font-weight: 500; }
+
+    /* Feature Lists */
+    .feature-list { 
+        margin-top: 2rem; 
+        flex-grow: 1; 
+        display: flex; 
+        flex-direction: column; 
+        gap: 0.8rem; 
+    }
+    
+    .feature-item { 
+        display: flex; align-items: center; gap: 10px; 
+        color: #e2e8f0; font-size: 0.85rem; line-height: 1.4; 
+    }
+    .feature-item i { 
+        flex-shrink: 0; width: 16px; height: 16px;
+    }
+    
+    /* States */
+    .feature-item.open i { color: #10b981; /* Green Check */ }
+    .feature-item.locked { color: #475569; /* Dark Gray */ }
+    .feature-item.locked i { color: #475569; /* Gray Lock */ }
+    .feature-item.locked span { text-decoration: line-through; text-decoration-color: rgba(255,255,255,0.1); }
+    
+    .feature-item strong { font-weight: 700; color: white; }
+    .feature-item.locked strong { color: #64748b; }
+
+    .section-divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        margin: 1rem 0;
+    }
+</style>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto pb-24" x-data="{ period: 'monthly' }">
+    
+    <div class="text-center py-16 px-4">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent-primary/10 border border-accent-primary/30 text-xs font-bold text-accent-primary mb-8 shadow-[0_0_20px_rgba(108,93,211,0.2)]">
+            <i data-lucide="rocket" class="w-3.5 h-3.5 fill-current"></i> INVESTASI LULUS CEPAT
+        </div>
+        <h1 class="text-4xl md:text-6xl font-extrabold text-white tracking-tight mb-6 leading-tight">
+            Selesaikan Skripsi <br class="hidden md:block" />
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-accent-primary via-purple-400 to-accent-cyan">Tanpa Drama & Begadang.</span>
+        </h1>
+        <p class="text-lg text-text-secondary max-w-2xl mx-auto mb-12 leading-relaxed">
+            Pilih senjata rahasiamu. Semua alat canggih sudah siap membantumu.
+        </p>
+
+        <div class="toggle-container" :data-state="period">
+            <button class="toggle-btn" :class="period === 'weekly' ? 'active' : ''" @click="period = 'weekly'">
+                Mingguan
+            </button>
+            <button class="toggle-btn" :class="period === 'monthly' ? 'active' : ''" @click="period = 'monthly'">
+                Bulanan <span class="ml-1.5 text-[9px] bg-green-500 text-white px-1.5 py-0.5 rounded shadow-lg">HEMAT 50%</span>
+            </button>
+            <div class="toggle-bg"></div>
+        </div>
+    </div>
+
+    <div x-show="period === 'weekly'" 
+         x-transition:enter="transition ease-out duration-500"
+         x-transition:enter-start="opacity-0 translate-y-12 scale-95"
+         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+         class="grid grid-cols-1 md:grid-cols-3 gap-6 px-4 max-w-7xl mx-auto items-center">
+        
+        <div class="pricing-card">
+            <div class="mb-4">
+                <h3 class="text-xl font-bold text-white">Weekly Basic</h3>
+                <p class="text-sm text-text-secondary mt-1">Coba fitur dasar.</p>
+            </div>
+            <div class="mb-6"><span class="price-amount">19.9rb</span> <span class="price-period">/minggu</span></div>
+            <button class="select-plan-btn w-full py-3.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold transition-all active:scale-95" data-plan="weekly_basic" data-amount="19900">Pilih Basic</button>
+            
+            <div class="feature-list">
+                <div class="feature-item open"><i data-lucide="check"></i><span>Generate <strong>1 Bab</strong> Skripsi</span></div>
+                <div class="feature-item open"><i data-lucide="check"></i><span><strong>1x</strong> Revisi AI</span></div>
+                <div class="feature-item open"><i data-lucide="check"></i><span>Cari Referensi Online</span></div>
+                <div class="feature-item locked"><i data-lucide="lock"></i><span>Analisis Data Statistik</span></div>
+                <div class="feature-item locked"><i data-lucide="lock"></i><span>Ekspor Word (Editable)</span></div>
+                <div class="feature-item locked"><i data-lucide="lock"></i><span>Cek Plagiasi & Auto-Fix</span></div>
+                <div class="feature-item locked"><i data-lucide="lock"></i><span>Chat Dokumen (RAG)</span></div>
+                <div class="feature-item locked"><i data-lucide="lock"></i><span>Model AI Premium (GPT-4o)</span></div>
+            </div>
+        </div>
+
+        <div class="pricing-card border-accent-primary/50 bg-bg-card">
+            <div class="mb-4">
+                <h3 class="text-xl font-bold text-accent-cyan">Weekly Pro</h3>
+                <p class="text-sm text-text-secondary mt-1">Ngebut seminggu jadi.</p>
+            </div>
+            <div class="mb-6"><span class="price-amount">29.9rb</span> <span class="price-period">/minggu</span></div>
+            <button class="select-plan-btn w-full py-3.5 rounded-xl bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/50 hover:bg-accent-cyan hover:text-black font-bold transition-all active:scale-95 shadow-[0_0_20px_rgba(0,209,255,0.2)]" data-plan="weekly_pro" data-amount="29900">Pilih Pro</button>
+            
+            <div class="feature-list">
+                <div class="feature-item open"><i data-lucide="check"></i><span><strong>Unlimited</strong> Generate Bab</span></div>
+                <div class="feature-item open"><i data-lucide="check"></i><span><strong>2x</strong> Revisi per Bab</span></div>
+                <div class="feature-item open"><i data-lucide="check"></i><span>Cari Referensi Online</span></div>
+                <div class="feature-item open"><i data-lucide="check"></i><span>Analisis Data Dasar</span></div>
+                <div class="feature-item open"><i data-lucide="check"></i><span>Ekspor PDF & Word</span></div>
+                <div class="feature-item locked"><i data-lucide="lock"></i><span>Cek Plagiasi & Auto-Fix</span></div>
+                <div class="feature-item locked"><i data-lucide="lock"></i><span>Chat Dokumen (RAG)</span></div>
+                <div class="feature-item locked"><i data-lucide="lock"></i><span>Model AI Premium (GPT-4o)</span></div>
+            </div>
+        </div>
+
+        <div class="pricing-card bg-gradient-to-b from-bg-card to-[#15171e]">
+            <div class="mb-4">
+                <h3 class="text-xl font-bold text-white">Weekly Premium</h3>
+                <p class="text-sm text-text-secondary mt-1">Fitur lengkap, singkat.</p>
+            </div>
+            <div class="mb-6"><span class="price-amount">49rb</span> <span class="price-period">/minggu</span></div>
+            <button class="select-plan-btn w-full py-3.5 rounded-xl bg-white text-black hover:bg-gray-200 font-bold transition-all shadow-lg active:scale-95" data-plan="weekly_premium" data-amount="49000">Pilih Premium</button>
+            
+            <div class="feature-list">
+                <div class="feature-item open"><i data-lucide="zap" class="text-yellow-400 fill-current"></i><span><strong>Unlimited</strong> Semua Fitur</span></div>
+                <div class="feature-item open"><i data-lucide="check"></i><span><strong>Unlimited</strong> Revisi</span></div>
+                <div class="feature-item open"><i data-lucide="check"></i><span>Cari Referensi Online</span></div>
+                <div class="feature-item open"><i data-lucide="check"></i><span>Analisis Data <strong>Lengkap</strong></span></div>
+                <div class="feature-item open"><i data-lucide="check"></i><span>Ekspor PDF & Word</span></div>
+                <div class="feature-item open"><i data-lucide="check"></i><span>Cek Plagiasi & Auto-Fix</span></div>
+                <div class="feature-item open"><i data-lucide="check"></i><span>Chat Dokumen (RAG)</span></div>
+                <div class="feature-item open"><i data-lucide="check"></i><span>Model AI Premium (GPT-4o)</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div x-show="period === 'monthly'" 
+         x-transition:enter="transition ease-out duration-500"
+         x-transition:enter-start="opacity-0 translate-y-12 scale-95"
+         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+         class="grid grid-cols-1 md:grid-cols-3 gap-8 px-4 max-w-7xl mx-auto items-start pt-4">
+        
+        <div class="pricing-card">
+            <div class="mb-4">
+                <h3 class="text-xl font-bold text-white">Monthly Basic</h3>
+                <p class="text-sm text-text-secondary mt-1">Cicil bab pelan-pelan.</p>
+            </div>
+            <div class="mb-6"><span class="price-amount">49rb</span> <span class="price-period">/bulan</span></div>
+            <button class="select-plan-btn w-full py-3.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold transition-all active:scale-95" data-plan="monthly_basic" data-amount="49000">Pilih Basic</button>
+            
+            <div class="feature-list">
+                <div class="feature-item open"><i data-lucide="check"></i><span>Generate <strong>3 Bab</strong> / bulan</span></div>
+                <div class="feature-item open"><i data-lucide="check"></i><span><strong>2x</strong> Revisi AI</span></div>
+                <div class="feature-item open"><i data-lucide="check"></i><span>Cari Referensi Online</span></div>
+                <div class="feature-item open"><i data-lucide="check"></i><span>Analisis Data Dasar</span></div>
+                <div class="feature-item locked"><i data-lucide="lock"></i><span>Ekspor Word (Edit)</span></div>
+                <div class="feature-item locked"><i data-lucide="lock"></i><span>Cek Plagiasi & Auto-Fix</span></div>
+                <div class="feature-item locked"><i data-lucide="lock"></i><span>Chat Dokumen (RAG)</span></div>
+                <div class="feature-item locked"><i data-lucide="lock"></i><span>Model AI Premium</span></div>
+            </div>
+        </div>
+
+        <div class="pricing-card popular">
+            <div class="badge-popular">PALING LARIS 🔥</div>
+            <div class="mb-4 mt-4">
+                <h3 class="text-2xl font-bold text-accent-primary">Monthly Pro</h3>
+                <p class="text-sm text-white/80 mt-1">Wajib mahasiswa tingkat akhir.</p>
+            </div>
+            <div class="mb-6"><span class="price-amount">99rb</span> <span class="price-period">/bulan</span></div>
+            <button class="select-plan-btn w-full py-4 rounded-xl bg-accent-primary hover:bg-accent-hover text-white font-bold shadow-[0_10px_30px_rgba(108,93,211,0.4)] hover:shadow-[0_15px_40px_rgba(108,93,211,0.6)] transition-all active:scale-95 flex justify-center gap-2 items-center" data-plan="monthly_pro" data-amount="99000">Ambil Paket Ini <i data-lucide="arrow-right" class="w-5 h-5"></i></button>
+            
+            <div class="feature-list">
+                <div class="feature-item open"><i data-lucide="check-circle-2" class="text-accent-primary fill-current/20"></i><span>Generate <strong>1 Skripsi Full</strong></span></div>
+                <div class="feature-item open"><i data-lucide="check-circle-2" class="text-accent-primary fill-current/20"></i><span><strong>3x</strong> Revisi Total</span></div>
+                <div class="feature-item open"><i data-lucide="check-circle-2" class="text-accent-primary fill-current/20"></i><span>Analisis Data <strong>Lengkap</strong></span></div>
+                <div class="feature-item open"><i data-lucide="check-circle-2" class="text-accent-primary fill-current/20"></i><span>Ekspor PDF & Word</span></div>
+                <div class="feature-item open"><i data-lucide="check-circle-2" class="text-accent-primary fill-current/20"></i><span>Interpretasi Hasil AI</span></div>
+                <div class="feature-item open"><i data-lucide="check-circle-2" class="text-accent-primary fill-current/20"></i><span>Chat Dokumen (RAG)</span></div>
+                <div class="feature-item open"><i data-lucide="check-circle-2" class="text-accent-primary fill-current/20"></i><span>Model AI Premium (GPT-4o)</span></div>
+                <div class="feature-item locked"><i data-lucide="lock"></i><span>Cek Plagiasi & Auto-Fix</span></div>
+            </div>
+        </div>
+
+        <div class="pricing-card bg-gradient-to-b from-bg-card to-[#15171e]">
+            <div class="mb-4 flex justify-between items-start">
+                <div>
+                    <h3 class="text-xl font-bold text-white">Monthly Ultimate</h3>
+                    <p class="text-sm text-text-secondary mt-1">Buat Joki / Sultan.</p>
+                </div>
+                <span class="badge-save">BEST VALUE</span>
+            </div>
+            <div class="mb-6"><span class="price-amount">149rb</span> <span class="price-period">/bulan</span></div>
+            <button class="select-plan-btn w-full py-3.5 rounded-xl bg-white text-black hover:bg-gray-200 font-bold transition-all shadow-lg active:scale-95" data-plan="monthly_ultimate" data-amount="149000">Jadi Sultan</button>
+            
+            <div class="feature-list">
+                <div class="feature-item open"><i data-lucide="zap" class="text-yellow-400 fill-current"></i><span>Generate <strong>2 Skripsi Full</strong></span></div>
+                <div class="feature-item open"><i data-lucide="check"></i><span><strong>Unlimited</strong> Revisi</span></div>
+                <div class="feature-item open"><i data-lucide="check"></i><span>Cek Plagiasi Premium</span></div>
+                <div class="feature-item open"><i data-lucide="check"></i><span>Auto-Fix Plagiasi</span></div>
+                <div class="feature-item open"><i data-lucide="check"></i><span>Semua Fitur Pro Terbuka</span></div>
+                <div class="feature-item open"><i data-lucide="check"></i><span>Prioritas Server Tertinggi</span></div>
+                <div class="feature-item open"><i data-lucide="check"></i><span>Model AI Paling Canggih</span></div>
+                <div class="feature-item open"><i data-lucide="check"></i><span>Support WhatsApp VIP</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-3xl mx-auto mt-24 px-4">
+        <h2 class="text-2xl font-bold text-white text-center mb-10">Pertanyaan Umum</h2>
+        <div class="space-y-4">
+            <div class="p-6 rounded-2xl bg-bg-card border border-white/5 hover:bg-white/[0.02] transition-colors">
+                <h4 class="font-bold text-white mb-2 text-sm">Maksud "1 Skripsi Full"?</h4>
+                <p class="text-text-secondary text-xs leading-relaxed">Kamu dapat kuota token AI yang cukup untuk generate Bab 1 sampai Bab 5 (~15-20 ribu kata). Jika butuh lebih, bisa ambil paket Ultimate.</p>
+            </div>
+            <div class="p-6 rounded-2xl bg-bg-card border border-white/5 hover:bg-white/[0.02] transition-colors">
+                <h4 class="font-bold text-white mb-2 text-sm">Kalau cuma butuh Bab 4 (Analisis Data)?</h4>
+                <p class="text-text-secondary text-xs leading-relaxed">Bisa ambil paket <strong>Weekly Basic</strong>. Fitur analisis statistik tetap terbuka, tapi fitur generate narasi terbatas.</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+$(document).ready(function() {
+    $('.select-plan-btn').on('click', function() {
+        const button = $(this);
+        const originalText = button.html();
+        
+        button.prop('disabled', true).html('<div class="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div> Proses...');
+
+        const plan = $(this).data('plan');
+        const amount = $(this).data('amount');
+
+        $.ajax({
+            url: "{{ url_for('payment.create_transaction') }}",
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ plan: plan, amount: amount }),
+            success: function(res) {
+                if (res.token) {
+                    window.snap.pay(res.token, {
+                        onSuccess: function(result){
+                            window.location.href = "{{ url_for('main.dashboard') }}?status=payment-success";
+                        },
+                        onPending: function(result){
+                            alert("Menunggu pembayaran Anda!");
+                            button.prop('disabled', false).html(originalText);
+                        },
+                        onError: function(result){
+                            alert("Pembayaran gagal.");
+                            button.prop('disabled', false).html(originalText);
+                        },
+                        onClose: function(){
+                            button.prop('disabled', false).html(originalText);
+                        }
+                    });
+                } else {
+                    alert('Gagal. Coba lagi.');
+                    button.prop('disabled', false).html(originalText);
+                }
+            },
+            error: function(err) {
+                alert('Kesalahan koneksi.');
+                button.prop('disabled', false).html(originalText);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

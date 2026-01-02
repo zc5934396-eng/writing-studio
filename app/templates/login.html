@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masuk Portal Skripsi - OnThesis</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        display: ['"Space Grotesk"', 'sans-serif']
+                    },
+                    colors: {
+                        bg: { main: '#020204', card: '#0A0B0F' },
+                        accent: { primary: '#6366F1', secondary: '#A855F7', cyan: '#06B6D4' }
+                    },
+                    animation: {
+                        'float-slow': 'float 10s ease-in-out infinite',
+                        'pulse-glow': 'pulseGlow 4s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        float: { '0%, 100%': { transform: 'translateY(0) rotate(0deg)' }, '50%': { transform: 'translateY(-20px) rotate(2deg)' } },
+                        pulseGlow: { '0%': { opacity: 0.4, filter: 'blur(30px)' }, '100%': { opacity: 0.7, filter: 'blur(50px)' } }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #020204; color: #E2E8F0; overflow: hidden; }
+        
+        /* --- KOSMIK BACKGROUND --- */
+        .bg-noise {
+            position: absolute; inset: 0; z-index: -1; opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+        .glow-orb {
+            position: absolute; border-radius: 50%; filter: blur(100px); z-index: -2;
+            animation: float-slow 15s infinite alternate;
+        }
+
+        /* --- THE ULTRA GLASS CARD --- */
+        .glass-panel {
+            background: rgba(10, 11, 15, 0.6);
+            backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5);
+        }
+        
+        /* Input Styling */
+        .modern-input {
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+            color: white; border-radius: 12px; padding: 14px 16px 14px 44px;
+            width: 100%; transition: all 0.3s ease-out; font-size: 0.95rem;
+        }
+        .modern-input:focus {
+            outline: none; border-color: #6366F1; background: rgba(99, 102, 241, 0.05);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+        
+        /* Text Gradient */
+        .text-gradient-satire {
+            background: linear-gradient(to right, #A855F7, #06B6D4);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .spinner { border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; }
+        .spinner-dark { border-color: rgba(0,0,0,0.3); border-top-color: #000; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+
+<body class="flex items-center justify-center min-h-screen relative py-10 selection:bg-accent-primary/30">
+
+    <div class="bg-noise"></div>
+    <div class="glow-orb w-[600px] h-[600px] bg-accent-primary/20 top-[-20%] left-[-10%]"></div>
+    <div class="glow-orb w-[500px] h-[500px] bg-accent-cyan/20 bottom-[-20%] right-[-10%] delay-1000"></div>
+
+    <div class="relative w-full max-w-4xl mx-4 group">
+        <div class="absolute -inset-1.5 bg-gradient-to-r from-accent-primary via-accent-secondary to-accent-cyan rounded-[2.5rem] opacity-30 group-hover:opacity-60 blur-2xl transition duration-1000 animate-pulse-glow"></div>
+        
+        <div class="relative glass-panel rounded-[2rem] overflow-hidden grid md:grid-cols-12 min-h-[600px] p-2">
+            
+            <div class="md:col-span-5 bg-white/5 rounded-[1.5rem] p-8 flex flex-col justify-between relative overflow-hidden">
+                <div class="relative z-10">
+                    <div class="flex items-center gap-3 mb-12">
+                         <img src="{{ url_for('static', filename='images/logo-onthesis-new.png') }}" alt="OnThesis" class="h-8 w-auto object-contain drop-shadow-[0_0_10px_rgba(99,102,241,0.5)]">
+                        <span class="font-display text-xl font-bold text-white tracking-tight"></span>
+                    </div>
+                    
+                    <h2 class="text-3xl md:text-4xl font-bold font-display text-white leading-[1.15] mb-6">
+                        Skripsi Kelar,<br>
+                        <span class="text-gradient-satire">Mental Aman.</span>
+                    </h2>
+                    <p class="text-gray-400 text-sm leading-relaxed font-medium pr-4">
+                        Platform ini dibuat karena kami tau rasanya di-ghosting dospem dan revisi jam 2 pagi. Biar AI yang kerja keras, lu istirahat aja.
+                    </p>
+                </div>
+
+                <div class="relative z-10 mt-auto">
+                    <div class="p-4 rounded-xl bg-[#0A0B0F]/80 border border-accent-primary/20 backdrop-blur-md shadow-[0_0_30px_-10px_rgba(99,102,241,0.3)]">
+                        <div class="flex gap-2 mb-3 border-b border-white/5 pb-2">
+                            <div class="w-2.5 h-2.5 rounded-full bg-[#FF5F56]"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-[#FFBD2E]"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-[#27C93F]"></div>
+                        </div>
+                        <p class="text-xs font-mono leading-loose">
+                            <span class="text-accent-cyan">$ status check</span><br>
+                            > Deadline: <span class="text-red-400 font-bold">Mepet Banget</span><br>
+                            > Dosen.mood: <span class="text-red-400 font-bold blink">Senggol Bacok</span><br>
+                            > Kopi: <span class="text-yellow-400 font-bold">Habis</span><br>
+                            <span class="text-accent-primary">> _ Solusi: Login OnThesis.</span>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/2 w-72 h-72 bg-accent-primary/10 rounded-full blur-[100px] pointer-events-none mix-blend-screen"></div>
+            </div>
+
+            <div class="md:col-span-7 p-8 md:p-12 flex flex-col justify-center">
+                
+                <div id="login-view" class="animate-fade-in-up">
+                    <div class="mb-8 pl-1">
+                        <h3 class="text-2xl font-bold text-white mb-2">Welcome Back, Pejuang.</h3>
+                        <p class="text-gray-500 text-sm font-medium">Login sebelum dospem nanya "Progres mana?".</p>
+                    </div>
+
+                    <form id="form-login-submit" class="space-y-5">
+                        <div class="relative group">
+                            <input type="email" id="email" required class="modern-input" placeholder="Email Kampus">
+                            <i data-lucide="mail" class="absolute left-4 top-[15px] w-5 h-5 text-gray-500 group-focus-within:text-accent-primary transition-colors"></i>
+                        </div>
+                        <div class="relative group">
+                            <input type="password" id="password" required class="modern-input pr-12" placeholder="Sandi Keramat">
+                            <i data-lucide="lock" class="absolute left-4 top-[15px] w-5 h-5 text-gray-500 group-focus-within:text-accent-primary transition-colors"></i>
+                            <button type="button" class="absolute right-4 top-[15px] text-gray-500 hover:text-white transition focus:outline-none" onclick="togglePassword('password', this)">
+                                <i data-lucide="eye" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="text-right">
+                            <a href="#" class="text-xs font-bold text-accent-primary hover:text-accent-cyan transition">Lupa Password?</a>
+                        </div>
+
+                        <button type="submit" id="login-btn" class="w-full py-4 rounded-xl bg-gradient-to-r from-accent-primary to-accent-secondary hover:opacity-90 text-white font-bold shadow-[0_10px_30px_-10px_rgba(99,102,241,0.5)] transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2">
+                            <span class="btn-text">Masuk ke Cockpit</span>
+                            <div class="spinner hidden"></div>
+                        </button>
+                    </form>
+
+                    <div class="relative my-8">
+                        <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-white/5"></div></div>
+                        <div class="relative flex justify-center text-[10px] font-bold tracking-wider"><span class="px-4 bg-transparent text-gray-600 uppercase">Jalur Cepat</span></div>
+                    </div>
+
+                    <button type="button" id="google-login-btn" class="w-full py-3.5 rounded-xl bg-white hover:bg-gray-100 text-bg-main text-sm font-bold transition-all flex items-center justify-center gap-3 shadow-lg">
+                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google">
+                        <span class="btn-text">Lanjut dengan Google</span>
+                        <div class="spinner spinner-dark hidden"></div>
+                    </button>
+
+                    <p class="mt-8 text-center text-sm text-gray-500 font-medium">
+                        Belum punya akun? 
+                        <a href="#" id="show-signup-link" class="font-bold text-white hover:text-accent-cyan transition underline decoration-accent-primary/50 decoration-2 underline-offset-4">Daftar Dulu Sini</a>
+                    </p>
+                </div>
+
+                <div id="signup-view" class="hidden animate-fade-in-up">
+                    <div class="mb-8 pl-1">
+                        <h3 class="text-2xl font-bold text-white mb-2">Buat Akun Baru</h3>
+                        <p class="text-gray-500 text-sm font-medium">Investasi terbaik buat kewarasan mental lo.</p>
+                    </div>
+
+                    <form id="form-signup-submit" class="space-y-5">
+                        <div class="relative group">
+                            <input type="email" id="signup-email" required class="modern-input" placeholder="Email">
+                            <i data-lucide="mail" class="absolute left-4 top-[15px] w-5 h-5 text-gray-500 group-focus-within:text-accent-primary transition-colors"></i>
+                        </div>
+                        <div class="relative group">
+                            <input type="password" id="signup-password" required class="modern-input pr-12" placeholder="Password">
+                            <i data-lucide="key" class="absolute left-4 top-[15px] w-5 h-5 text-gray-500 group-focus-within:text-accent-primary transition-colors"></i>
+                            <button type="button" class="absolute right-4 top-[15px] text-gray-500 hover:text-white transition focus:outline-none" onclick="togglePassword('signup-password', this)">
+                                <i data-lucide="eye" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                        <div class="relative group">
+                            <input type="password" id="signup-confirm-password" required class="modern-input pr-12" placeholder="Konfirmasi Password">
+                            <i data-lucide="check-circle" class="absolute left-4 top-[15px] w-5 h-5 text-gray-500 group-focus-within:text-accent-primary transition-colors"></i>
+                        </div>
+
+                        <button type="submit" id="signup-btn" class="w-full py-4 rounded-xl bg-gradient-to-r from-accent-primary to-accent-cyan hover:opacity-90 text-white font-bold shadow-[0_10px_30px_-10px_rgba(99,102,241,0.5)] transition-all hover:scale-[1.01] flex items-center justify-center gap-2 mt-6">
+                            <span class="btn-text">Daftar & Mulai</span>
+                            <div class="spinner hidden"></div>
+                        </button>
+                    </form>
+
+                    <p class="mt-8 text-center text-sm text-gray-500 font-medium">
+                        Udah punya akun? 
+                        <a href="#" id="show-login-link" class="font-bold text-white hover:text-accent-cyan transition underline decoration-accent-primary/50 decoration-2 underline-offset-4">Masuk Aja</a>
+                    </p>
+                </div>
+                
+                <div id="login-error" class="mt-6 text-center text-red-400 text-sm font-bold bg-red-500/10 py-3 rounded-xl border border-red-500/20 hidden animate-pulse shadow-[0_0_20px_-5px_rgba(239,68,68,0.3)]"></div>
+
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { 
+            getAuth, 
+            GoogleAuthProvider, 
+            signInWithPopup, 
+            signInWithEmailAndPassword, 
+            createUserWithEmailAndPassword 
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { app } from "{{ url_for('static', filename='js/firebase.js') }}";
+
+        const auth = getAuth(app);
+
+        window.togglePassword = function(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (input.type === "password") {
+                input.type = "text";
+                btn.innerHTML = '<i data-lucide="eye-off" class="w-5 h-5"></i>';
+            } else {
+                input.type = "password";
+                btn.innerHTML = '<i data-lucide="eye" class="w-5 h-5"></i>';
+            }
+            lucide.createIcons();
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+            
+            const loginError = document.getElementById('login-error');
+            const loginView = document.getElementById('login-view');
+            const signupView = document.getElementById('signup-view');
+            const showSignupLink = document.getElementById('show-signup-link');
+            const showLoginLink = document.getElementById('show-login-link');
+            const loginBtn = document.getElementById('login-btn');
+            const googleLoginBtn = document.getElementById('google-login-btn');
+            const signupBtn = document.getElementById('signup-btn');
+
+            const setLoading = (btn, isLoading) => {
+                const text = btn.querySelector('.btn-text');
+                const spinner = btn.querySelector('.spinner');
+                btn.disabled = isLoading;
+                if(text) text.classList.toggle('hidden', isLoading);
+                if(spinner) spinner.classList.toggle('hidden', !isLoading);
+            };
+
+            const showError = (msg) => {
+                loginError.textContent = msg;
+                loginError.classList.remove('hidden');
+                setTimeout(() => loginError.classList.add('hidden'), 4000);
+            };
+
+            showSignupLink.addEventListener('click', (e) => { e.preventDefault(); loginView.classList.add('hidden'); signupView.classList.remove('hidden'); loginError.classList.add('hidden'); });
+            showLoginLink.addEventListener('click', (e) => { e.preventDefault(); signupView.classList.add('hidden'); loginView.classList.remove('hidden'); loginError.classList.add('hidden'); });
+
+            const sendTokenToServer = async (idToken) => {
+                try {
+                    const response = await fetch("{{ url_for('auth.verify_email_token') }}", {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token: idToken }),
+                    });
+                    const data = await response.json();
+                    if (data.status === 'success') { window.location.href = data.redirect_url; } 
+                    else { throw new Error(data.message || 'Gagal verifikasi.'); }
+                } catch (err) { throw new Error(err.message); }
+            };
+
+            document.getElementById('form-login-submit').addEventListener('submit', (e) => {
+                e.preventDefault(); loginError.classList.add('hidden'); setLoading(loginBtn, true);
+                signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value)
+                    .then(res => res.user.getIdToken()).then(token => sendTokenToServer(token))
+                    .catch(err => { showError("Email/Password salah. Dah ngopi belum?"); setLoading(loginBtn, false); });
+            });
+
+            googleLoginBtn.addEventListener('click', () => {
+                loginError.classList.add('hidden'); setLoading(googleLoginBtn, true);
+                signInWithPopup(auth, new GoogleAuthProvider())
+                    .then(res => res.user.getIdToken()).then(token => sendTokenToServer(token))
+                    .catch(err => { showError("Login Google batal. Yahh..."); setLoading(googleLoginBtn, false); });
+            });
+
+            document.getElementById('form-signup-submit').addEventListener('submit', (e) => {
+                e.preventDefault(); loginError.classList.add('hidden');
+                const pass = document.getElementById('signup-password').value;
+                if(pass !== document.getElementById('signup-confirm-password').value) return showError("Password beda, Bor. Fokus.");
+                
+                setLoading(signupBtn, true);
+                createUserWithEmailAndPassword(auth, document.getElementById('signup-email').value, pass)
+                    .then(res => res.user.getIdToken()).then(token => sendTokenToServer(token))
+                    .catch(err => {
+                        if (err.code === 'auth/email-already-in-use') showError('Email udah dipake orang lain.');
+                        else if (err.code === 'auth/weak-password') showError('Password lemes (min 6 karakter).');
+                        else showError('Gagal daftar. Coba lagi nanti.');
+                        setLoading(signupBtn, false);
+                    });
+            });
+        });
+    </script>
+</body>
+</html>
