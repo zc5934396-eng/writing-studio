@@ -55,34 +55,34 @@ export default function ProjectSidebar({ onInsertCitation }) {
         : [];
 
     return (
-        <aside className="w-full flex flex-col h-full bg-sidebar-bg border-r border-sidebar-border relative">
+        <aside className="w-full flex flex-col h-full bg-[var(--bg-tertiary)] border-r border-[var(--border-primary)] relative glass-panel">
             
             {/* 1. HEADER PROJECT */}
-            <div className="p-3 border-b border-sidebar-border bg-sidebar-bg">
+            <div className="p-3 border-b border-[var(--border-primary)] bg-[var(--bg-secondary)]">
                 <button 
                     onClick={() => setProjectDropdownOpen(!projectDropdownOpen)}
-                    className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-sidebar-hover transition-all group relative"
+                    className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-[var(--bg-secondary)] transition-all group relative border border-transparent hover:border-[var(--border-secondary)]"
                 >
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#6C5DD3] to-[#4F46E5] flex items-center justify-center shrink-0 shadow-lg shadow-[#6C5DD3]/20">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-primary-hover)] flex items-center justify-center shrink-0 shadow-lg shadow-[var(--accent-primary)]/20">
                         <FolderOpen size={14} className="text-white" />
                     </div>
                     <div className="flex-1 text-left overflow-hidden">
-                        <div className="text-[10px] text-slate-500 font-bold tracking-wider flex items-center gap-2">
+                        <div className="text-[10px] text-[var(--text-tertiary)] font-bold tracking-wider flex items-center gap-2">
                             PROJECT
-                            {isSaving && <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"/>}
+                            {isSaving && <span className="w-1.5 h-1.5 bg-[var(--success)] rounded-full animate-pulse"/>}
                             {/* Label PRO jika user adalah Pro */}
                             {isPro && (
-                                <span className="flex items-center gap-0.5 px-1 py-0.5 rounded bg-gradient-to-r from-amber-500 to-orange-500 text-[8px] font-bold text-white">
+                                <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-500 to-orange-500 text-[8px] font-bold text-white">
                                     <Crown size={8} fill="currentColor"/> PRO
                                 </span>
                             )}
                         </div>
-                        <div className="text-xs font-bold text-white truncate">{safeData.title || "Untitled Project"}</div>
+                        <div className="text-xs font-bold text-[var(--text-primary)] truncate">{safeData.title || "Untitled Project"}</div>
                     </div>
                     
                     {/* TOMBOL SETTINGS - FIX: Langsung buka modal internal */}
                     <div 
-                        className="p-1.5 text-slate-500 hover:text-white hover:bg-white/10 rounded transition-colors" 
+                        className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] rounded transition-colors" 
                         onClick={(e) => { 
                             e.stopPropagation(); 
                             setIsSettingsOpen(true); 
@@ -123,16 +123,16 @@ export default function ProjectSidebar({ onInsertCitation }) {
             </div>
 
             {/* 2. TAB SWITCHER */}
-            <div className="grid grid-cols-2 p-1 m-3 bg-sidebar-tab-bg rounded-lg border border-sidebar-border">
+            <div className="grid grid-cols-2 p-1 m-3 bg-[var(--bg-secondary)] rounded-lg border border-[var(--border-primary)]">
                 <button 
                     onClick={() => setActiveTab('structure')}
-                    className={`flex items-center justify-center gap-2 py-2 rounded-md text-[10px] font-bold transition-all ${activeTab === 'structure' ? 'bg-sidebar-tab-active text-sidebar-text' : 'text-sidebar-text-secondary'}`}
+                    className={`flex items-center justify-center gap-2 py-2 rounded-md text-[10px] font-bold transition-all ${activeTab === 'structure' ? 'bg-[var(--accent-primary)] text-white shadow-md' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
                 >
                     <LayoutGrid size={12} /> Struktur
                 </button>
                 <button 
                     onClick={() => setActiveTab('references')}
-                    className={`flex items-center justify-center gap-2 py-2 rounded-md text-[10px] font-bold transition-all ${activeTab === 'references' ? 'bg-sidebar-tab-active text-sidebar-text' : 'text-sidebar-text-secondary'}`}
+                    className={`flex items-center justify-center gap-2 py-2 rounded-md text-[10px] font-bold transition-all ${activeTab === 'references' ? 'bg-[var(--accent-primary)] text-white shadow-md' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
                 >
                     <BookOpen size={12} /> Referensi
                 </button>
@@ -144,17 +144,17 @@ export default function ProjectSidebar({ onInsertCitation }) {
                 {/* TAB 1: LIST BAB (CHAPTERS) */}
                 {activeTab === 'structure' && (
                     <div className="space-y-1">
-                        <div className="px-2 py-2 text-[10px] font-bold text-sidebar-text-secondary uppercase tracking-widest">CHAPTERS</div>
+                        <div className="px-2 py-2 text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">CHAPTERS</div>
                         {chapters.map((chapter) => (
                             <button
                                 key={chapter.id}
                                 onClick={() => changeActiveChapter(chapter.id)}
                                 disabled={isContentLoading}
-                                className={`w-full flex items-center gap-3 p-2.5 rounded-lg transition-all border ${activeChapterId === chapter.id ? 'bg-primary/10 text-sidebar-text border-primary/20' : 'text-sidebar-text-secondary border-transparent hover:bg-sidebar-hover'}`}
+                                className={`w-full flex items-center gap-3 p-2.5 rounded-lg transition-all border ${activeChapterId === chapter.id ? 'bg-[var(--accent-primary)] text-white shadow-md' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] border-transparent hover:bg-[var(--bg-secondary)]'}`}
                             >
-                                <FileText size={14} className={activeChapterId === chapter.id ? "text-primary" : "text-sidebar-text-secondary"} />
+                                <FileText size={14} className={activeChapterId === chapter.id ? "text-white" : "text-[var(--text-secondary)]"} />
                                 <span className="text-[11px] font-medium truncate flex-1 text-left">{chapter.title}</span>
-                                {activeChapterId === chapter.id && <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_primary]"></div>}
+                                {activeChapterId === chapter.id && <div className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.5)]"></div>}
                             </button>
                         ))}
                     </div>
@@ -163,42 +163,42 @@ export default function ProjectSidebar({ onInsertCitation }) {
                 {/* TAB 2: LIST REFERENSI */}
                 {activeTab === 'references' && (
                     <div className="space-y-3">
-                         <button onClick={() => setIsRefModalOpen(true)} className="w-full py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20">
+                         <button onClick={() => setIsRefModalOpen(true)} className="w-full py-2.5 bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-md">
                             <Search size={14} /> Cari Referensi Online
                         </button>
 
                         <div className="space-y-2">
                             {displayedReferences.length > 0 ? displayedReferences.map((ref, idx) => (
-                                <div key={idx} className="bg-sidebar-card-bg p-3 rounded-xl border border-sidebar-border hover:border-primary/30 transition-all group">
+                                <div key={idx} className="bg-[var(--bg-secondary)] p-3 rounded-lg border border-[var(--border-primary)] hover:border-[var(--accent-primary)] transition-all group">
                                     <div className="flex items-start gap-2 mb-2">
-                                        <div className="mt-0.5 shrink-0 w-4 h-4 bg-sidebar-tab-bg rounded flex items-center justify-center text-[8px] font-bold text-sidebar-text-secondary">
+                                        <div className="mt-0.5 shrink-0 w-4 h-4 bg-[var(--bg-tertiary)] rounded flex items-center justify-center text-[8px] font-bold text-[var(--text-tertiary)]">
                                             {displayedReferences.length - idx}
                                         </div>
                                         <div>
-                                            <div className="text-[11px] font-bold text-sidebar-text line-clamp-2 leading-snug">{ref.title}</div>
-                                            <div className="flex items-center gap-2 mt-1 text-[9px] text-sidebar-text-secondary">
-                                                <span className="bg-sidebar-hover px-1.5 py-0.5 rounded text-sidebar-text-secondary">{ref.year || "?"}</span>
+                                            <div className="text-[11px] font-bold text-[var(--text-primary)] line-clamp-2 leading-snug">{ref.title}</div>
+                                            <div className="flex items-center gap-2 mt-1 text-[9px] text-[var(--text-secondary)]">
+                                                <span className="bg-[var(--bg-tertiary)] px-1.5 py-0.5 rounded text-[var(--text-tertiary)]">{ref.year || "?"}</span>
                                                 <span className="truncate max-w-[120px]">{ref.author}</span>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="flex gap-2 pt-2 border-t border-sidebar-border opacity-60 group-hover:opacity-100 transition-opacity">
+                                    <div className="flex gap-2 pt-2 border-t border-[var(--border-primary)] opacity-60 group-hover:opacity-100 transition-opacity">
                                         <button 
                                             onClick={() => onInsertCitation && onInsertCitation(`(${ref.author ? ref.author.split(',')[0].split(' ').pop() : 'Anonim'}, ${ref.year})`)}
-                                            className="flex-1 py-1.5 bg-sidebar-tab-bg hover:bg-primary text-sidebar-text-secondary hover:text-white rounded text-[9px] font-bold flex items-center justify-center gap-1"
+                                            className="flex-1 py-1.5 bg-[var(--bg-tertiary)] hover:bg-[var(--accent-primary)] text-[var(--text-secondary)] hover:text-white rounded text-[9px] font-bold flex items-center justify-center gap-1"
                                         >
                                             <Quote size={10} /> Cite
                                         </button>
                                         <button 
                                             onClick={() => handleCopyBib(ref)}
-                                            className="flex-1 py-1.5 bg-sidebar-tab-bg hover:bg-success text-sidebar-text-secondary hover:text-white rounded text-[9px] font-bold flex items-center justify-center gap-1"
+                                            className="flex-1 py-1.5 bg-[var(--bg-tertiary)] hover:bg-[var(--success)] text-[var(--text-secondary)] hover:text-white rounded text-[9px] font-bold flex items-center justify-center gap-1"
                                         >
                                             <Copy size={10} /> Copy Bib
                                         </button>
                                     </div>
                                 </div>
                             )) : (
-                                <div className="text-center py-8 text-sidebar-text-secondary text-[10px]">Belum ada referensi.</div>
+                                <div className="text-center py-8 text-[var(--text-tertiary)] text-[10px]">Belum ada referensi.</div>
                             )}
                         </div>
                     </div>

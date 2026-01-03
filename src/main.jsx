@@ -6,6 +6,7 @@ import { BrowserRouter } from 'react-router-dom';
 import WritingStudioRoot from './WritingStudioRoot';
 import { ProjectProvider } from './context/ProjectContext';
 import { ToastProvider } from './components/UI/ToastProvider'; // <--- PASTIKAN INI ADA DI ATAS
+import { ThemeProvider } from './context/ThemeContext';
 
 import './index.css';
 
@@ -24,12 +25,15 @@ if (container) {
   root.render(
     <React.StrictMode>
       <BrowserRouter>
-        {/* ToastProvider WAJIB membungkus semuanya */}
-        <ToastProvider>
-            <ProjectProvider initialData={initialState}>
-                <WritingStudioRoot />
-            </ProjectProvider>
-        </ToastProvider>
+        {/* ThemeProvider membungkus aplikasi */}
+        <ThemeProvider>
+          {/* ToastProvider WAJIB membungkus semuanya */}
+          <ToastProvider>
+              <ProjectProvider initialData={initialState}>
+                  <WritingStudioRoot />
+              </ProjectProvider>
+          </ToastProvider>
+        </ThemeProvider>
       </BrowserRouter>
     </React.StrictMode>
   );

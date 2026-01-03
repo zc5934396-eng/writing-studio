@@ -214,7 +214,7 @@ function ToolbarPlugin() {
   const Divider = () => <div className="w-px h-5 bg-[#252830] mx-1" />;
 
   return (
-    <div className="flex items-center flex-wrap gap-1 p-2 border-b border-[#252830] bg-[#16181D] sticky top-0 z-20 rounded-t-xl select-none shadow-sm">
+    <div className="flex items-center flex-wrap gap-1 p-2 border-b border-[var(--border-primary)] bg-[var(--bg-secondary)] sticky top-0 z-20 rounded-t-lg select-none shadow-sm">
       {/* HISTORY */}
       <HeaderBtn onClick={() => editor.dispatchCommand(UNDO_COMMAND)} icon={Undo} disabled={!canUndo} title="Undo" />
       <HeaderBtn onClick={() => editor.dispatchCommand(REDO_COMMAND)} icon={Redo} disabled={!canRedo} title="Redo" />
@@ -246,7 +246,7 @@ function ToolbarPlugin() {
       
       {/* SPACING PLACEHOLDER (FITUR EXTRA) */}
       <div className="ml-auto flex items-center gap-2">
-         <span className="text-[9px] text-[var(--text-tertiary)] font-bold px-2 py-1 bg-[#0F1115] rounded">MS WORD MODE</span>
+         <span className="text-[9px] text-[var(--text-tertiary)] font-bold px-2 py-1 bg-[var(--bg-primary)] rounded">MS WORD MODE</span>
       </div>
     </div>
   );
@@ -313,18 +313,18 @@ const LexicalEditor = forwardRef(({
   };
 
   return (
-    <div className="relative w-[816px] max-w-full min-h-[1056px] mx-auto bg-[#0F1115] border border-[#252830] shadow-2xl rounded-xl overflow-hidden flex flex-col transition-all duration-300">
+    <div className="relative w-[816px] max-w-full min-h-[1056px] mx-auto bg-[var(--bg-primary)] border border-[var(--border-primary)] shadow-xl rounded-lg overflow-hidden flex flex-col transition-all duration-300 glass-panel">
       <LexicalComposer initialConfig={initialConfig}>
         
         {/* TOOLBAR SULTAN DI SINI */}
         <ToolbarPlugin />
         
-        <div className="flex-1 relative bg-[#0F1115]">
+        <div className="flex-1 relative bg-[var(--bg-primary)]">
           <RichTextPlugin
             contentEditable={
                 <ContentEditable 
                     className="outline-none min-h-[900px] p-12 text-base focus:outline-none" 
-                    style={{ fontFamily: '"Times New Roman", Times, serif', lineHeight: '1.6', color: var(--text-secondary) }} 
+                    style={{ fontFamily: '"Times New Roman", Times, serif', lineHeight: '1.6', color: 'var(--text-secondary)' }} 
                 />
             }
             placeholder={
