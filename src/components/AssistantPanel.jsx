@@ -39,11 +39,11 @@ export default function AssistantPanel(props) {
     // (Opsional logic, tapi bagus untuk UX)
 
     return (
-        <div className="flex flex-col h-full bg-sidebar-bg text-sidebar-text border-l border-sidebar-border">
+        <div className="flex flex-col h-full bg-[var(--bg-tertiary)] text-[var(--text-primary)] border-l border-[var(--border-primary)] glass-panel">
             
             {/* 1. TOP HEADER: MODE SWITCHER */}
-            <div className="p-3 bg-sidebar-header-bg border-b border-sidebar-border">
-                <div className="flex bg-sidebar-tab-bg p-1 rounded-xl border border-sidebar-border">
+            <div className="p-3 bg-[var(--bg-secondary)] border-b border-[var(--border-primary)]">
+                <div className="flex bg-[var(--bg-secondary)] p-1 rounded-lg border border-[var(--border-primary)]">
                     <ModeBtn 
                         isActive={mode === 'write'} 
                         onClick={() => { setMode('write'); setActiveTab('generator'); }} 
@@ -60,7 +60,7 @@ export default function AssistantPanel(props) {
             </div>
 
             {/* 2. SUB-NAVIGATION (Tab Icons) */}
-            <div className="flex items-center gap-1 px-3 py-2 bg-sidebar-header-bg/50 border-b border-sidebar-border overflow-x-auto custom-scrollbar">
+            <div className="flex items-center gap-1 px-3 py-2 bg-[var(--bg-secondary)] border-b border-[var(--border-primary)] overflow-x-auto custom-scrollbar">
                 {tabs[mode].map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.id;
@@ -70,8 +70,8 @@ export default function AssistantPanel(props) {
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg transition-all text-[10px] font-bold uppercase tracking-wider ${
                                 isActive 
-                                ? 'bg-primary text-white shadow-lg shadow-primary/20' 
-                                : 'text-sidebar-text-secondary hover:text-sidebar-text hover:bg-sidebar-hover'
+                                ? 'bg-[var(--accent-primary)] text-white shadow-md' 
+                                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
                             }`}
                         >
                             <Icon size={14} strokeWidth={isActive ? 2.5 : 2} />
@@ -82,7 +82,7 @@ export default function AssistantPanel(props) {
             </div>
 
             {/* 3. DYNAMIC CONTENT (No Change in Logic, Just Wrapper) */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar relative bg-sidebar-bg">
+            <div className="flex-1 overflow-y-auto custom-scrollbar relative bg-[var(--bg-tertiary)]">
                 {activeTab === 'generator' && <GeneratorTab {...props} />}
                 {activeTab === 'chat' && <ChatInterface {...props} />}
                 {activeTab === 'tools' && <ToolsTab {...props} />}
@@ -100,8 +100,8 @@ function ModeBtn({ isActive, onClick, icon: Icon, label }) {
             onClick={onClick}
             className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-bold transition-all ${
                 isActive 
-                ? 'bg-[#252830] text-white shadow-sm' 
-                : 'text-slate-500 hover:text-slate-300'
+                ? 'bg-[var(--accent-primary)] text-white shadow-md' 
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
         >
             <Icon size={12} /> {label}
